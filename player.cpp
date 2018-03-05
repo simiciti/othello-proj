@@ -1,5 +1,12 @@
 #include "player.hpp"
 
+/**
+ * This specific file is in the repository of Nathaniel Smith
+ * This is an (initially simple) player for a computerized version of the game othello.
+ * 
+ */
+
+
 /*
  * Constructor for the player; initialize everything here. The side your AI is
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish
@@ -8,6 +15,8 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
+    //how much time available for computation is there?
+    int time_remaining = 0;
 
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
