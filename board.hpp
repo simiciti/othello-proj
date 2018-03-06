@@ -20,6 +20,7 @@ public:
     Board();
     ~Board();
     Board *copy();
+    void copyFromBoard(Board *otherBoard);
 
     bool isDone();
     bool hasMoves(Side side);
