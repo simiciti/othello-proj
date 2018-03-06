@@ -29,6 +29,11 @@ Board *Board::copy() {
     return newBoard;
 }
 
+void Board::copyFromBoard(Board *otherBoard) {
+    black = otherBoard->black;
+    taken = otherBoard->taken;
+}
+
 bool Board::occupied(int x, int y) {
     return taken[x + 8*y];
 }

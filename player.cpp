@@ -57,9 +57,12 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * process the opponent's opponents move before calculating your own move
      */
 
-    if (opponentsMove != nullptr) {
+    return doCornerMove(opponentsMove, msLeft);
+}
+
+Move *Player::doSimpleMove(Move *opponentsMove, int msLeft) { 
+    if (opponentsMove != nullptr)
         this->board->doMove(opponentsMove, oppSide);
-    }
 
     Move *m = new Move(0, 0);
 
@@ -75,4 +78,36 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
 
     return nullptr;
+}
+
+Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
+    if (opponentsMove != nullptr)
+        this->board->doMove(opponentsMove, oppSide);
+
+    float best_score = 0;
+    Move cornerMost = Move(-1, -1);
+    Move curr = Move(0, 0);
+    float curr_score;
+
+    for (int x = 0; x < 8; x++) {
+        curr.setX(x);
+        for (int y = 0; y < 8; y++) {
+            curr.setY(y);
+            if (this->board->checkMove(&curr, this->mySide)) {
+                curr_score = (x - 3.5) * (x - 3.5) + (y - 3.5) * (y - 3.5);
+                if (best_score < curr_score) {
+                    cornerMost.setX(x);
+                    cornerMost.setY(y);
+                    best_score = curr_score;
+                }
+            }
+        }
+    }
+
+    if (cornerMost.getX() == -1)
+        return nullptr;
+    else {
+        this->board->doMove(&cornerMost, this->mySide);
+        return new Move(cornerMost.getX(), cornerMost.getY());
+    }
 }
