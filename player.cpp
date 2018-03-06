@@ -52,20 +52,20 @@ Player::~Player() {
  * return nullptr.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
-    /*
-     * TODO: Implement how moves your AI should play here. You should first
-     * process the opponent's opponents move before calculating your own move
-     */
 
-    return doGreedyMove(opponentsMove, msLeft);
+    return doSimpleMove(opponentsMove, msLeft);
 }
 
+/**
+ * @brief Iterate through moves and perform first legal move.
+ */
 Move *Player::doSimpleMove(Move *opponentsMove, int msLeft) { 
+    // Perform opponent's move
     if (opponentsMove != nullptr)
         this->board->doMove(opponentsMove, oppSide);
 
     Move *m = new Move(0, 0);
-
+    // Iterate through all possible moves and return first legal move.
     for (int i = 0; i < 8; i++) {
         m->setX(i);
         for (int j = 0; j < 8; j++) {
@@ -77,10 +77,15 @@ Move *Player::doSimpleMove(Move *opponentsMove, int msLeft) {
         }
     }
 
+    // If no move was found, return nullptr. 
     return nullptr;
 }
 
+/**
+ * @brief Perform move closest to a corner.
+ */
 Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
+    // Perform opponent's move
     if (opponentsMove != nullptr)
         this->board->doMove(opponentsMove, oppSide);
 
@@ -88,7 +93,8 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
     Move cornerMost = Move(-1, -1);
     Move curr = Move(0, 0);
     float curr_score;
-
+    // Iterate through all possible moves and determine legal move
+    // closest to a corner. 
     for (int x = 0; x < 8; x++) {
         curr.setX(x);
         for (int y = 0; y < 8; y++) {
@@ -104,6 +110,8 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
         }
     }
 
+    // If no move was found, return nullptr. 
+    // Otherwise, return the move.
     if (cornerMost.getX() == -1)
         return nullptr;
     else {
@@ -112,6 +120,9 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
     }
 }
 
+/**
+ * @brief Perform move yielding the greatest difference in score. 
+ */
 Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
     if (opponentsMove != nullptr)
         this->board->doMove(opponentsMove, oppSide);
@@ -122,6 +133,8 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
     int curr_score;
     Board testBoard = Board();
 
+    // Iterate through all possible moves and determine legal move
+    // which yields the greatest difference in score.  
     for (int x = 0; x < 8; x++) {
         curr.setX(x);
         for (int y = 0; y < 8; y++) {
@@ -139,6 +152,8 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
         }
     }
 
+     // If no move was found, return nullptr. 
+    // Otherwise, return the move.
     if (best_score == -65)
         return nullptr;
     else {
