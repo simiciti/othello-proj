@@ -1,4 +1,6 @@
 #include "player.hpp"
+#include <cstdlib>
+#include <stdio.h>
 
 /**
  * This specific file is in the repository of Nathaniel Smith
@@ -23,12 +25,17 @@ Player::Player(Side side) {
      * precalculating things, etc.) However, remember that you will only have
      * 30 seconds.
      */
+    // Set our side and opponent's side
+    this->mySide = side;
+    (side == BLACK) ? this->oppSide = WHITE : this->oppSide = BLACK;
+    this->board = new Board();
 }
 
 /*
  * Destructor for the player.
  */
 Player::~Player() {
+    delete this->board;
 }
 
 /*
@@ -49,5 +56,23 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move
      */
+
+    if (opponentsMove != nullptr) {
+        this->board->doMove(opponentsMove, oppSide);
+    }
+
+    Move *m = new Move(0, 0);
+
+    for (int i = 0; i < 8; i++) {
+        m->setX(i);
+        for (int j = 0; j < 8; j++) {
+            m->setY(j);
+            if (this->board->checkMove(m, this->mySide)) {
+                this->board->doMove(m, this->mySide);
+                return m;
+            }
+        }
+    }
+
     return nullptr;
 }

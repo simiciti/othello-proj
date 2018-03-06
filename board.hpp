@@ -30,6 +30,7 @@ public:
     int countWhite();
 
     void setBoard(char data[]);
+    void printBoard();
 };
 
 #endif
