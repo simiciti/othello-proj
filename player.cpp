@@ -57,7 +57,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * process the opponent's opponents move before calculating your own move
      */
 
-    return doCornerMove(opponentsMove, msLeft);
+    return doGreedyMove(opponentsMove, msLeft);
 }
 
 Move *Player::doSimpleMove(Move *opponentsMove, int msLeft) { 
@@ -109,5 +109,40 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
     else {
         this->board->doMove(&cornerMost, this->mySide);
         return new Move(cornerMost.getX(), cornerMost.getY());
+    }
+}
+
+Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
+    if (opponentsMove != nullptr)
+        this->board->doMove(opponentsMove, oppSide);
+
+    int best_score = -65;
+    Move greedyMove = Move(-1, -1);
+    Move curr = Move(0, 0);
+    int curr_score;
+    Board testBoard = Board();
+
+    for (int x = 0; x < 8; x++) {
+        curr.setX(x);
+        for (int y = 0; y < 8; y++) {
+            curr.setY(y);
+            if (this->board->checkMove(&curr, this->mySide)) {
+                testBoard.copyFromBoard(this->board);
+                testBoard.doMove(&curr, this->mySide);
+                curr_score = testBoard.count(this->mySide) - testBoard.count(this->oppSide);
+                if (curr_score > best_score) {
+                    greedyMove.setX(x);
+                    greedyMove.setY(y);
+                    best_score = curr_score;
+                }
+            }
+        }
+    }
+
+    if (best_score == -65)
+        return nullptr;
+    else {
+        this->board->doMove(&greedyMove, this->mySide);
+        return new Move(greedyMove.getX(), greedyMove.getY());
     }
 }
