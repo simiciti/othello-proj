@@ -52,8 +52,14 @@ Player::~Player() {
  * return nullptr.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
-
-    return doSimpleMove(opponentsMove, msLeft);
+    if (this->testingMinimax)
+    {
+        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2);
+    }
+    else
+    {
+        return doSimpleMove(opponentsMove, msLeft);
+    }
 }
 
 /**
@@ -142,7 +148,8 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
             if (this->board->checkMove(&curr, this->mySide)) {
                 testBoard.copyFromBoard(this->board);
                 testBoard.doMove(&curr, this->mySide);
-                curr_score = testBoard.count(this->mySide) - testBoard.count(this->oppSide);
+                curr_score = testBoard.count(this->mySide) - 
+                testBoard.count(this->oppSide);
                 if (curr_score > best_score) {
                     greedyMove.setX(x);
                     greedyMove.setY(y);
@@ -161,3 +168,183 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
         return new Move(greedyMove.getX(), greedyMove.getY());
     }
 }
+
+/**
+ * @brief Board evaluator for minimax function using a simple coin 
+ * counting heuristic 
+ * 
+ * @return the difference in coins 
+ */
+double Player::depth2_eval(Board *board)
+{
+    return board->count(this->mySide) - board->count(this->oppSide);
+}
+
+
+/**
+ * @brief The minimax algorithm. This will recursivey call
+ * the algorithm for the player and the opponent to a depth of limit 
+ * 
+ * @param board - a copy of the current board state in the tree
+ * @param depth - the current depth in the tree. Should advance after a 
+ * player - opponent cycle.
+ * @param isMax - are we seeking to maximize utiity (player) or minimize it 
+ * (opponent)?
+ * @param side - the current side for the entity calculating 
+ * @param msLeft- miliseconds left 
+ * @param limit - the depth to search before returnining 
+ * 
+ * @return the calculated utility for that branch
+ */
+double Player::depth2_minimax(Board *board, int depth, bool isMax,
+                              Side side, int msLeft, int limit)
+{
+    if (depth > limit)
+    {
+        return depth2_eval(board);
+    }
+    else
+    {
+        Board *br_board = board->copy();
+        
+        double minimax;
+        
+        if (isMax)
+        {
+            minimax = -100;
+        }
+        else
+        {
+            minimax = 100;
+        }
+        Move *m = new Move(0, 0);
+        
+        for (int i = 0; i < 8; i++) {
+            m->setX(i);
+            for (int j = 0; j < 8; j++) {
+                m->setY(j);
+                if (br_board->checkMove(m, side)) {
+                    br_board->doMove(m, side);
+                    double path_value;
+                    Side other = (side == BLACK) ? WHITE : BLACK;
+                    if (this->mySide == side)
+                    {
+                        path_value = depth2_minimax(br_board, depth, 
+                                                !isMax, other, msLeft, limit);
+                    }
+                    else //this is a hypothetical calculation for the opponent 
+                    {
+                        path_value = depth2_minimax(br_board, depth + 1, !isMax,
+                                                other, msLeft, limit);
+                    }
+                    if (isMax ^ (path_value < minimax))
+                    {
+                        minimax = path_value;
+                    }
+                }
+            }
+        }
+        delete br_board;
+        return minimax;
+    }
+}
+
+/**
+ * @brief Level 0 for the minimax algorithm. This will recursivey call
+ * the algorithm for the player and the opponent to a depth of limit 
+ * 
+ * @param board - a copy of the current board state in the tree
+ * @param depth - the current depth in the tree. Should advance after a 
+ * player - opponent cycle.
+ * @param isMax - are we seeking to maximize utiity (player) or minimize it 
+ * (opponent)?
+ * @param side - the current side for the entity calculating 
+ * @param msLeft- miliseconds left 
+ * @param limit - the depth to search before returnining 
+ * 
+ * @return the calculated best move
+ */
+Move *Player::minimax_move(Board *board, int depth, bool isMax, 
+                              Side side, int msLeft, int limit)
+{
+        if (!this->board->hasMoves(this->mySide))
+        {
+            return nullptr;
+        }
+        Board *br_board = board->copy();
+        double minimax = 0;
+        int xcor;
+        int ycor;
+        Move *m = new Move(0, 0);
+
+        for (int i = 0; i < 8; i++) {
+            m->setX(i);
+            for (int j = 0; j < 8; j++) {
+                m->setY(j);
+                if (br_board->checkMove(m, side)) {
+                    br_board->doMove(m, side);
+                    double path_value;
+                    Side other = (side == BLACK) ? WHITE : BLACK;
+                    if (this->mySide == side)
+                    {
+                        path_value = depth2_minimax(br_board, depth,
+                                                !isMax, other, msLeft, limit);
+                    }
+                    else //this is a hypothetical calculation for the opponent 
+                    {
+                        path_value = depth2_minimax(br_board, depth + 1, 
+                                                !isMax, other, msLeft, limit);
+                    }
+                    if (isMax ^ (path_value < minimax))
+                    {
+                        minimax = path_value;
+                        xcor = i;
+                        ycor = j;
+                    }
+                }
+            }
+        }
+        delete br_board;
+        if (depth == 0 && isMax)
+        {
+            m->setX(xcor);
+            m->setY(ycor);
+        }
+        return m;
+}
+/**
+ * @brief Skeleton for a more complex evaluation function
+ */
+double Player::evaluate(Board *board)
+{
+    //corners not final name 
+    //double corners_component  = cat_eval(corners(1), corners(0));
+    //double stability_component = cat_eval(stability(1), stability(0));
+    //double coins_component = cat_eval(coins(1), coins(0));
+    //double mobility_component = cat_eval(mobility(1), mobility(0));
+    
+    double corners_weight = 0.3;
+    double mobility_weight = 0.05;
+    double stability_weight = 0.25;
+    double coins_weight = 0.25;
+    return corners_weight + mobility_weight + stability_weight + coins_weight;
+}
+/**
+ * category agnostic evaluation function
+ * @param max_val - the value for the player who will move, 
+ * desires maximization of utility
+ * @param min_val - the value for the player who desires the 
+ * minimization of utility for the max player
+ */
+double Player::cat_eval(double max_val, double min_val)
+{
+    if (max_val + min_val != 0 )
+    {
+        return (max_val - min_val) / (max_val + min_val);
+    }
+    else
+    {
+       return 0.0; 
+    }
+}
+
