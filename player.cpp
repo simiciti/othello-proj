@@ -1,6 +1,7 @@
 #include "player.hpp"
 #include <cstdlib>
 #include <stdio.h>
+#include <cmath>
 
 /**
  * This specific file is in the repository of Nathaniel Smith
@@ -66,10 +67,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else
     {
-        if(this->mySide == BLACK)
-            return doSimpleMove(opponentsMove, msLeft);
-        else
-            return doCornerMove(opponentsMove, msLeft);
+        
+        return doLimitMove(opponentsMove, msLeft);
     }
 }
 
@@ -106,8 +105,9 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
     if (opponentsMove != nullptr)
         this->board->doMove(opponentsMove, oppSide);
 
-    float best_score = 0;
+    float best_score = -100;
     Move cornerMost = Move(-1, -1);
+    Move besideEdge = Move(-1, -1);
     Move curr = Move(0, 0);
     float curr_score;
     // Iterate through all possible moves and determine legal move
@@ -117,8 +117,12 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
         for (int y = 0; y < 8; y++) {
             curr.setY(y);
             if (this->board->checkMove(&curr, this->mySide)) {
-                curr_score = (x - 3.5) * (x - 3.5) + (y - 3.5) * (y - 3.5);
-                if (best_score < curr_score) {
+                if (x == 2 || x == 7 || y == 2 || y == 7) {
+                    besideEdge.setX(x);
+                    besideEdge.setY(y);
+                }
+                curr_score = max(abs(x - 3.5), abs(y - 3.5));
+                if (best_score < curr_score ) {
                     cornerMost.setX(x);
                     cornerMost.setY(y);
                     best_score = curr_score;
@@ -130,16 +134,17 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
     // If no move was found, return nullptr. 
     // Otherwise, return the move.
     if (cornerMost.getX() == -1)
-        return nullptr;
+        if(besideEdge.getX() == -1)
+            return nullptr;
+        else {
+            this->board->doMove(&besideEdge, this->mySide);
+            return new Move(besideEdge.getX(), besideEdge.getY());
+        }
     else {
         this->board->doMove(&cornerMost, this->mySide);
         return new Move(cornerMost.getX(), cornerMost.getY());
     }
 }
-
-/**
- * @brief 
- */
 
 /**
  * @brief Perform move yielding the greatest difference in score. 
@@ -181,6 +186,49 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
     else {
         this->board->doMove(&greedyMove, this->mySide);
         return new Move(greedyMove.getX(), greedyMove.getY());
+    }
+}
+
+/**
+ * @brief Perform move minimizing opponent's possible moves.
+ */
+Move *Player::doLimitMove(Move *opponentsMove, int msLeft) {
+    if (opponentsMove != nullptr)
+        this->board->doMove(opponentsMove, oppSide);
+
+    int best_score = -65;
+    Move mobileMove = Move(-1, -1);
+    Move curr = Move(0, 0);
+    int curr_score;
+    Board testBoard = Board();
+
+    // Iterate through all possible moves and determine legal move
+    // which yields the leastest possible moves for opponent.
+    for (int x = 0; x < 8; x++) {
+        curr.setX(x);
+        for (int y = 0; y < 8; y++) {
+            curr.setY(y);
+            if (this->board->checkMove(&curr, this->mySide)) {
+                testBoard.copyFromBoard(this->board);
+                testBoard.doMove(&curr, this->mySide);
+                curr_score = - testBoard.countMoves(this->oppSide);
+                testBoard.count(this->oppSide);
+                if (curr_score > best_score) {
+                    mobileMove.setX(x);
+                    mobileMove.setY(y);
+                    best_score = curr_score;
+                }
+            }
+        }
+    }
+
+     // If no move was found, return nullptr. 
+    // Otherwise, return the move.
+    if (best_score == -65)
+        return nullptr;
+    else {
+        this->board->doMove(&mobileMove, this->mySide);
+        return new Move(mobileMove.getX(), mobileMove.getY());
     }
 }
 

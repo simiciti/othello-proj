@@ -16,6 +16,7 @@ public:
     Move *doSimpleMove(Move *opponentsMove, int msLeft);
     Move *doCornerMove(Move *opponentsMove, int msLeft);
     Move *doGreedyMove(Move *opponentsMove, int msLeft);
+    Move *doLimitMove(Move *opponentsMove, int msLeft);
 
     void setBoard(char data[]);
     

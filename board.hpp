@@ -27,6 +27,7 @@ public:
     bool checkMove(Move *m, Side side);
     void doMove(Move *m, Side side);
     int count(Side side);
+    int countMoves(Side side);
     int countBlack();
     int countWhite();
 
