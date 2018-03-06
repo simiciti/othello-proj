@@ -17,6 +17,7 @@ public:
     Move *doCornerMove(Move *opponentsMove, int msLeft);
     Move *doGreedyMove(Move *opponentsMove, int msLeft);
 
+    void setBoard(char data[]);
     
     double depth2_eval(Board *board);
     

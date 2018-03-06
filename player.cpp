@@ -17,8 +17,6 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-    //how much time available for computation is there?
-    int time_remaining = 0;
 
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -38,6 +36,16 @@ Player::~Player() {
     delete this->board;
 }
 
+
+/**
+ * @brief loads the representation into data
+ * 
+ * @param data[] - char array of data representing a board
+ */
+void Player::setBoard(char data[])
+{
+    this->board->setBoard(data);
+}
 /*
  * Compute the next move given the opponent's last move. Your AI is
  * expected to keep track of the board on its own. If this is the first move,
@@ -177,7 +185,6 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
  */
 double Player::depth2_eval(Board *board)
 {
-    std::cerr << board->count(this->mySide) << " " << board->count(this->oppSide) << std::endl;
     return board->count(this->mySide) - board->count(this->oppSide);
 }
 
@@ -202,7 +209,6 @@ double Player::depth2_minimax(Board *board, int depth, bool isMax,
 {
     if (depth > limit)
     {
-        //std::cerr << depth2_eval(board);
         return depth2_eval(board);
     }
     else
@@ -281,7 +287,6 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
             for (int j = 0; j < 8; j++) {
                 m->setY(j);
                 if (board->checkMove(m, side)) {
-                
                     br_board.doMove(m, side);
                     
                     double path_value;
@@ -301,7 +306,6 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                         minimax = path_value;
                         xcor = i;
                         ycor = j;
-                        //std::cerr << minimax << " xcor " << i << " ycor " << j << std::endl;
                     }
                     br_board.copyFromBoard(board); 
                 }
