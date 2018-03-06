@@ -29,6 +29,9 @@ Board *Board::copy() {
     return newBoard;
 }
 
+/**
+ * Copy otherBoard into board
+ */
 void Board::copyFromBoard(Board *otherBoard) {
     black = otherBoard->black;
     taken = otherBoard->taken;
@@ -185,6 +188,9 @@ void Board::setBoard(char data[]) {
     }
 }
 
+/**
+ * Prints board to terminal
+ */
 void Board::printBoard() {
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
