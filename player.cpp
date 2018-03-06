@@ -66,7 +66,10 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else
     {
-        return doSimpleMove(opponentsMove, msLeft);
+        if(this->mySide == BLACK)
+            return doSimpleMove(opponentsMove, msLeft);
+        else
+            return doCornerMove(opponentsMove, msLeft);
     }
 }
 
@@ -133,6 +136,10 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
         return new Move(cornerMost.getX(), cornerMost.getY());
     }
 }
+
+/**
+ * @brief 
+ */
 
 /**
  * @brief Perform move yielding the greatest difference in score. 
