@@ -54,7 +54,7 @@ Player::~Player() {
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
     if (this->testingMinimax)
     {
-        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2);
+        return minimax_move(this->board, 0, true, this->mySide, msLeft, 0);
     }
     else
     {
@@ -177,6 +177,7 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
  */
 double Player::depth2_eval(Board *board)
 {
+    std::cerr << board->count(this->mySide) << " " << board->count(this->oppSide) << std::endl;
     return board->count(this->mySide) - board->count(this->oppSide);
 }
 
@@ -201,50 +202,44 @@ double Player::depth2_minimax(Board *board, int depth, bool isMax,
 {
     if (depth > limit)
     {
+        //std::cerr << depth2_eval(board);
         return depth2_eval(board);
     }
     else
     {
-        Board *br_board = board->copy();
+        Board br_board = Board();
+        br_board.copyFromBoard(board);
         
-        double minimax;
-        
-        if (isMax)
-        {
-            minimax = -100;
-        }
-        else
-        {
-            minimax = 100;
-        }
+        double minimax = (isMax) ? -100 : 100;
         Move *m = new Move(0, 0);
         
         for (int i = 0; i < 8; i++) {
             m->setX(i);
             for (int j = 0; j < 8; j++) {
                 m->setY(j);
-                if (br_board->checkMove(m, side)) {
-                    br_board->doMove(m, side);
+                if (board->checkMove(m, side)) {
+                    
+                    br_board.doMove(m, side);
                     double path_value;
                     Side other = (side == BLACK) ? WHITE : BLACK;
                     if (this->mySide == side)
                     {
-                        path_value = depth2_minimax(br_board, depth, 
+                        path_value = depth2_minimax(&br_board, depth, 
                                                 !isMax, other, msLeft, limit);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
-                        path_value = depth2_minimax(br_board, depth + 1, !isMax,
+                        path_value = depth2_minimax(&br_board, depth + 1, !isMax,
                                                 other, msLeft, limit);
                     }
                     if (isMax ^ (path_value < minimax))
                     {
                         minimax = path_value;
                     }
+                    br_board.copyFromBoard(board);
                 }
             }
         }
-        delete br_board;
         return minimax;
     }
 }
@@ -271,28 +266,34 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
         {
             return nullptr;
         }
-        Board *br_board = board->copy();
-        double minimax = 0;
+        
+        double minimax = (isMax) ? -100 : 100;
+        
         int xcor;
         int ycor;
+        
         Move *m = new Move(0, 0);
-
+    
+        Board br_board = Board();
+        br_board.copyFromBoard(board);
         for (int i = 0; i < 8; i++) {
             m->setX(i);
             for (int j = 0; j < 8; j++) {
                 m->setY(j);
-                if (br_board->checkMove(m, side)) {
-                    br_board->doMove(m, side);
+                if (board->checkMove(m, side)) {
+                
+                    br_board.doMove(m, side);
+                    
                     double path_value;
                     Side other = (side == BLACK) ? WHITE : BLACK;
                     if (this->mySide == side)
                     {
-                        path_value = depth2_minimax(br_board, depth,
+                        path_value = depth2_minimax(&br_board, depth,
                                                 !isMax, other, msLeft, limit);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
-                        path_value = depth2_minimax(br_board, depth + 1, 
+                        path_value = depth2_minimax(&br_board, depth + 1, 
                                                 !isMax, other, msLeft, limit);
                     }
                     if (isMax ^ (path_value < minimax))
@@ -300,11 +301,13 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                         minimax = path_value;
                         xcor = i;
                         ycor = j;
+                        //std::cerr << minimax << " xcor " << i << " ycor " << j << std::endl;
                     }
+                    br_board.copyFromBoard(board); 
                 }
             }
         }
-        delete br_board;
+       
         if (depth == 0 && isMax)
         {
             m->setX(xcor);
