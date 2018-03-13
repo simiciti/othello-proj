@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Group Member Contributions
 Arjun
 
@@ -16,3 +17,13 @@ time while preserving a reasonable search depth.
 We implemented transposition tables to speed up the iterative deepening 
 by storing the results of prior searches, eliminating much of the 
 redundancy from retreading those prior searches. 
+=======
+CONTRIBUTIONS:
+	Week 1:
+	Bose:		Implemented basic functions and heuristics 
+	Nathaniel:	
+
+
+
+IMPROVEMENTS TO AI:
+>>>>>>> 3cc3306580d82d71fae05b122cfb959e494378e8

@@ -108,7 +108,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     else 
     {
         Move *m =  minimaxMove(this->board, 0, true,
-                               this->mySide, msLeft, 6, false);
+                               this->mySide, msLeft, 3, false);
         this->board->doMove(m, this->mySide);
         return m;
     }
@@ -579,10 +579,8 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
                 }
         if (depth == 0 && isMax)
         {
-            
             m->setX(xcor);
-            m->setY(ycor);
-            
+            m->setY(ycor); 
         }
         if (xcor == -1)
             {
@@ -599,15 +597,7 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
 /**
  * @brief Evaluation function
  */
-double Player::evaluate(Board *board)
-{
-    //corners not final name 
-    //double corners_component  = cat_eval(corners(1), corners(0));
-    //double stability_component = cat_eval(stability(1), stability(0));
-    //double coins_component = cat_eval(coins(1), coins(0));
-    // double mobility_component = cat_eval(mobility(1), mobility(0));
-    
-
+double Player::evaluate(Board *board) {
     double corners_weight = 0.3 * evaluateCornerCloseness(board);
     double mobility_weight = 0.2 * evaluateMobility(board);
     double stability_weight = 0.25;
@@ -664,8 +654,8 @@ double Player::evaluateMobility(Board *board) {
 }
 
 /**
- * @brief Counts difference in coins and normalizes value to the
- * range [-100,100]
+ * @brief Counts difference in coins and normalizes value 
+ * to the range [-100,100]
  */
 double Player::evaluateCoins(Board *board) {
     double diff = board->count(this->mySide) - board->count(this->oppSide);
@@ -689,9 +679,13 @@ double Player::evaluateWeightedCoins(Board *board) {
     return double (myScore - oppScore);
 }
 
+/**
+ * @brief Returns static weight of given coordinate
+ */
 double Player::getWeight(int x, int y) {
     double symMove = pow((x-3.5), 4) + pow((y-3.5), 4);
 
+    // Attempt to optimize for time 
     if (symMove >= symMove11) {
         if (symMove == symMove20) {
             return 2;
@@ -734,8 +728,6 @@ double Player::getWeight(int x, int y) {
     //     return 1;
     // else // (symMove == symMove32 || symMove == symMove30)
     //     return 0;
-
-
 }
 
 /**
@@ -756,4 +748,3 @@ double Player::cat_eval(double max_val, double min_val)
        return 0.0; 
     }
 }
-
