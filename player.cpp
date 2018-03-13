@@ -70,7 +70,8 @@ void Player::setBoard(char data[])
  */
 int Player::timeAllocation(int msLeft, int move)
 {
-    int alloc = msLeft * ((move - 4) / 60);
+    // int alloc = (msLeft * (move - 4)) / 60;
+    int alloc = msLeft;
     //the first run
     if (alloc <= 0)
     {
@@ -499,7 +500,7 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
                               Side side, int msLeft, int limit, bool isTest)
 {
         double value = (isMax) ? -100 : 100;
-        auto start = std::chrono::system_clock::now();
+        // auto start = std::chrono::system_clock::now();
         int xcor = -1;
         int ycor;
         /*
@@ -509,31 +510,31 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
         of msLeft truly being 0, but odds of exactly 0 deemed low enough
         that this case needn't be considered.
         */
-        int allocation = timeAllocation(msLeft, board->count(this->mySide) 
-        + board->count(this->oppSide));
-        if (msLeft <= 0)
-        {
-            allocation = 1000000;
-        }
-        int used = 0;
+        // int allocation = timeAllocation(msLeft, board->count(this->mySide) 
+        // + board->count(this->oppSide));
+        // if (msLeft <= 0)
+        // {
+        //     allocation = 1000000;
+        // }
+        // int used = 0;
 
         Move *m = new Move(0, 0);
         Move *l = new Move(0, 0);
         for (int n = 1; n < limit + 1; n++)
         {
-        if ((allocation - used) <= 0)
-        {
-            return m;
-            
-        }
-        else if (((used / allocation) > 0.4) && ((used / allocation ) <= 1))
-        {
-           if ((l->getX() == m->getX() && (l->getY() == m->getY()))) 
-           {
-               delete l;
-               return m;
-           }
-        }
+        //     if ((allocation - used) <= 0)
+        //     {
+        //         return m;
+                
+        //     }
+        //     else if ((((double) used / (double) allocation) > 0.4) && ((used / allocation ) <= 1))
+        //     {
+        //        if ((l->getX() == m->getX() && (l->getY() == m->getY()))) 
+        //        {
+        //            delete l;
+        //            return m;
+        //        }
+        //     }
         
         l->setX(m->getX());
         l->setY(m->getY());
@@ -582,9 +583,9 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
             {
                 return nullptr;
             }
-            auto end = std::chrono::system_clock::now();
-            std::chrono::duration<double> elapsed = end - start;
-            used = elapsed.count() * 1000; //is in microseconds
+            // auto end = std::chrono::system_clock::now();
+            // std::chrono::duration<double> elapsed = end - start;
+            // used = elapsed.count() * 1000; //is in microseconds
         }
         return m;
 }
@@ -698,7 +699,7 @@ double Player::getWeight(int x, int y) {
                 return -4;
         }
     }
-    else 
+    else {
         if (symMove >= symMove31) {
             return -1;
         }
@@ -708,7 +709,7 @@ double Player::getWeight(int x, int y) {
             else
                 return 1;
         }
-
+    }
     // if (symMove == symMove00)
     //     return 4;
     // else if (symMove == symMove10)
@@ -723,6 +724,7 @@ double Player::getWeight(int x, int y) {
     //     return 1;
     // else // (symMove == symMove32 || symMove == symMove30)
     //     return 0;
+
 }
 
 /**
