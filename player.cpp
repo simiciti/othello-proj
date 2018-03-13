@@ -391,6 +391,47 @@ double Player::evaluate(Board *board)
     double coins_weight = 0.25;
     return corners_weight + mobility_weight + stability_weight + coins_weight;
 }
+
+double Player::evaluateCornerCloseness(Board *board) {
+    int myTiles, oppTiles = 0;
+    int dx, dy;
+    for (int x = 0; x < 8; x = x + 7) {
+        for (int y = 0; y < 8; y = 7) {
+            if(!board->occupied(x,y)) {
+                (x == 0) ? dx = 1 : dx = 6;
+                (y == 0) ? dy = 1 : dy = 6;
+                if (board->get(this->mySide, x, dy)) {
+                    myTiles++;
+                }
+                else if (board->get(this->oppSide, x, dy)) {
+                    oppTiles++;
+                }
+                if (board->get(this->mySide, dx, y)) {
+                    myTiles++;
+                }
+                else if (board->get(this->oppSide, dx, y)) {
+                    oppTiles++; 
+                }
+            }
+        }
+    }
+    return -12.5 * (myTiles - oppTiles);
+}
+
+double Player::evaluateMobility(Board *board) {
+    double myCount = board->count(this->mySide);
+    double oppCount = board->count(this->oppSide);
+
+    if(myCount > oppCount)
+        return (100 * myCount) / (myCount + oppCount);
+    else if (myCount < oppCount)
+        return (-100 * oppCount) / (myCount + oppCount);
+    else
+        return 0;
+}
+
+
+
 /**
  * category agnostic evaluation function
  * @param max_val - the value for the player who will move, 

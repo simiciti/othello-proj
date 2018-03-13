@@ -29,6 +29,8 @@ public:
     
     
     double evaluate(Board *board);
+    double evaluateCornerCloseness(Board *board);
+    double evaluateMobility(Board *board);
     double cat_eval(double max_val, double min_val);
     
     // Flag to tell if the player is running within the test_minimax context
