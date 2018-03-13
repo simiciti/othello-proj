@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <cmath>
+#include <time.h>
+#include chrono
 
 #define symMove00 300.125
 #define symMove10 189.125
@@ -29,7 +31,7 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-
+    
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
      * precalculating things, etc.) However, remember that you will only have
@@ -91,7 +93,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         }
 
         // Move *m = iterMax(this->board, &Player::evaluateCornerCloseness);
-        Move *m =  minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
+        Move *m =  minimax_move(this->board, 0, true, this->mySide, msLeft, 1, false);
         this->board->doMove(m, this->mySide);
         return m;
     }
@@ -532,6 +534,7 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
             for (int j = 0; j < 8; j++) {
                 m->setY(j);
                 if (board->checkMove(m, side)) {
+                    auto start = std::chrono::system_clock::now();
                     Board br_board = Board();
                     br_board.copyFromBoard(board);
                     br_board.doMove(m, side);
@@ -554,6 +557,10 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                         xcor = i;
                         ycor = j;
                     }
+                    auto end = std::chrono::system_clock::now();
+                    std::chrono::duration<double> sec = end - start;
+                    
+                    std::cerr << "single branch eval time " << sec.count() << std::endl;
                 }
             }
         }
@@ -585,6 +592,7 @@ double Player::evaluate(Board *board)
     //double coins_component = cat_eval(coins(1), coins(0));
     //double mobility_component = cat_eval(mobility(1), mobility(0));
     //std::cerr << "evaluating" << std::endl;
+    auto start = std::chrono::system_clock::now();
     double corners_weight = 0.3; //* evaluateCornerCloseness(board);
     //std::cerr << "corner" << std::endl;
     double mobility_weight = 0.05 * evaluateMobility(board);
@@ -592,6 +600,9 @@ double Player::evaluate(Board *board)
     double stability_weight = 0.25;
     double coins_weight = 0.25 * evaluateCoins(board);
     //std::cerr << "coin" << std::endl;
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> sec = end - start;
+    std::cerr < "eval time " << sec.count() << std::endl;
     return corners_weight + mobility_weight + stability_weight + coins_weight;
 }
 
