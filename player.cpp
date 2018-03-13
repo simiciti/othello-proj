@@ -17,8 +17,8 @@
 #define symMove33 0.125
 
 /**
- * This specific file is in the repository of Nathaniel Smith
- * This is an (initially simple) player for a computerized version of the game othello.
+ * This is an (initially simple) player for a computerized 
+ * version of the game othello.
  * 
  */
 
@@ -38,7 +38,6 @@ Player::Player(Side side) {
      */
     // Set our side and opponent's side
     this->mySide = side;
-    //std::cerr << "Black?" << (side == BLACK) << std::endl;
     (side == BLACK) ? this->oppSide = WHITE : this->oppSide = BLACK;
     this->board = new Board();
 }
@@ -71,7 +70,16 @@ void Player::setBoard(char data[])
  */
 int Player::timeAllocation(int msLeft, int move)
 {
-    return msLeft * ((move - 4) / 60);
+    int alloc = msLeft * ((move - 4) / 60);
+    //the first run
+    if (alloc <= 0)
+    {
+        return msLeft / 64;
+    }
+    else
+    {
+        return alloc;
+    }
 }
 /*
  * Compute the next move given the opponent's last move. Your AI is
@@ -99,7 +107,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else 
     {
-        Move *m =  minimaxMove(this->board, 0, true, this->mySide, msLeft, 2, false);
+        Move *m =  minimaxMove(this->board, 0, true,
+                               this->mySide, msLeft, 2, false);
         this->board->doMove(m, this->mySide);
         return m;
     }
@@ -400,7 +409,7 @@ double Player::depth2_eval(Board *board)
  * @return the calculated utility for that branch
  */
 double Player::minimax(Board *board, int depth, bool isMax,
-                              Side side, double *alpha, double *beta, int msLeft, int limit, bool isTest)
+    Side side, double *alpha, double *beta, int msLeft, int limit, bool isTest)
 {
     if (depth > limit)
     {
@@ -438,7 +447,7 @@ double Player::minimax(Board *board, int depth, bool isMax,
                         else
                         {
                         path_value = minimax(&br_board, depth, 
-                                                !isMax, other, alpha, beta, msLeft, limit, isTest);
+                        !isMax, other, alpha, beta, msLeft, limit, isTest);
                          this->board->table[hash] = path_value;
                         }
                         value = std::max(value, path_value);
@@ -453,7 +462,7 @@ double Player::minimax(Board *board, int depth, bool isMax,
                         else
                         {
                         path_value = minimax(&br_board, depth + 1, !isMax,
-                                                other, alpha, beta, msLeft, limit, isTest);
+                                other, alpha, beta, msLeft, limit, isTest);
                         this->board->table[hash] = path_value;
                         }
                         value = std::min(value, path_value);
@@ -493,7 +502,20 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
         auto start = std::chrono::system_clock::now();
         int xcor = -1;
         int ycor;
-        int allocation = timeAllocation(msLeft, board->count(this->mySide) + board->count(this->oppSide));
+        /*
+        Testing suggestst this happens if nothing was passed to
+        Player::doMove() for msLeft, such as the case of an untimed
+        game. Am aware that in actual tournament play, may be case 
+        of msLeft truly being 0, but odds of exactly 0 deemed low enough
+        that this case needn't be considered.
+        
+        */
+        int allocation = timeAllocation(msLeft, board->count(this->mySide) 
+        + board->count(this->oppSide));
+        if (msLeft <= 0)
+        {
+            allocation = 1000000;
+        }
         int used = 0;
 
         Move *m = new Move(0, 0);
@@ -534,11 +556,13 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
                     Side other = (side == BLACK) ? WHITE : BLACK;
                     if (this->mySide == side)
                     {
-                        path_value = minimax(&br_board, depth,!isMax, other, &alpha, &beta, msLeft, n, isTest);
+                        path_value = minimax(&br_board, depth,!isMax, other, 
+                                             &alpha, &beta, msLeft, n, isTest);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
-                        path_value = minimax(&br_board, depth + 1, !isMax, other, &alpha, &beta, msLeft, n, isTest);
+                        path_value = minimax(&br_board, depth + 1, !isMax, 
+                                    other, &alpha, &beta, msLeft, n, isTest);
                     }
                     if (isMax ^ (path_value < value))
                     {
@@ -559,14 +583,13 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
         }
         if (xcor == -1)
             {
-                std::cerr << "nothing found" << std::endl;
                 return nullptr;
             }
             auto end = std::chrono::system_clock::now();
             std::chrono::duration<double> elapsed = end - start;
             used = elapsed.count() * 1000; //is in microseconds
         }
-        return nullptr;
+        return m;
 }
 
 /**
@@ -584,7 +607,8 @@ double Player::evaluate(Board *board)
     // double mobility_weight = 0.2 * evaluateMobility(board);
     // double stability_weight = 0.25;
     // double coins_weight = 0.25 * evaluateCoins(board);
-    // return corners_weight + mobility_weight + stability_weight + coins_weight;
+    // return corners_weight + mobility_weight + stability_weight + 
+    //coins_weight;
     return evaluateWeightedCoins(board);
 }
 
@@ -636,7 +660,8 @@ double Player::evaluateMobility(Board *board) {
 }
 
 /**
- * @brief Counts difference in coins and normalizes value to the range [-100,100]
+ * @brief Counts difference in coins and normalizes value to the
+ * range [-100,100]
  */
 double Player::evaluateCoins(Board *board) {
     double diff = board->count(this->mySide) - board->count(this->oppSide);
