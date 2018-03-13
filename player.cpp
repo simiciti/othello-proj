@@ -610,7 +610,7 @@ double Player::evaluateCornerCloseness(Board *board) {
     int myTiles, oppTiles = 0;
     int dx, dy;
     for (int x = 0; x < 8; x = x + 7) {
-        for (int y = 0; y < 8; y = 7) {
+        for (int y = 0; y < 8; y + 7) {
             if(!board->occupied(x,y)) {
                 (x == 0) ? dx = 1 : dx = 6;
                 (y == 0) ? dy = 1 : dy = 6;
