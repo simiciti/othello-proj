@@ -2,6 +2,7 @@
 #define __BOARD_H__
 
 #include <bitset>
+#include <unordered_map>
 #include "common.hpp"
 using namespace std;
 
@@ -10,9 +11,12 @@ class Board {
 private:
     bitset<64> black;
     bitset<64> taken;
-   
+    
     void set(Side side, int x, int y);
     bool onBoard(int x, int y);
+    
+    
+
 
 public:
     Board();
@@ -30,6 +34,9 @@ public:
     int countBlack();
     int countWhite();
 
+    bitset<128> hsh();
+    //transposition table
+    unordered_map<bitset<128>, double> table;
     void setBoard(char data[]);
     void printBoard();
 };

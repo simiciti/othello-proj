@@ -28,8 +28,8 @@ public:
     
     
     double minimax(Board *board, int depth, bool isMax, Side side, double *alpha, double *beta,
-                          int msLeft, int limit, bool isTest, double *eval);
-    Move* minimax_move(Board *board, int depth, bool isMax, Side side, 
+                          int msLeft, int limit, bool isTest);
+    Move* minimaxMove(Board *board, int depth, bool isMax, Side side, 
                           int msLeft, int limit, bool isTest);
     
     
@@ -38,7 +38,8 @@ public:
     
 
     int mobility_eval(Board *board, Side side);
-    double evaluate(Board *board, double *eval);
+    int timeAllocation(int msLeft, int move);
+    double evaluate(Board *board);
     double evaluateCornerCloseness(Board *board);
     double evaluateMobility(Board *board);
     double evaluateCoins(Board *board);
@@ -54,9 +55,6 @@ private:
 	Side mySide;
 	Side oppSide;
 	Board *board;
-    //transposition table
-    unordered_map<bitset<64>, double> table;
-    
 };
 
 #endif

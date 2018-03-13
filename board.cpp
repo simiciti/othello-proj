@@ -11,6 +11,7 @@ Board::Board() {
     taken.set(4 + 8 * 4);
     black.set(4 + 8 * 3);
     black.set(3 + 8 * 4);
+    table = unordered_map<bitset<128>, double>();
 }
 
 /*
@@ -183,6 +184,26 @@ int Board::countBlack() {
  */
 int Board::countWhite() {
     return taken.count() - black.count();
+}
+
+/**
+ * @brief Returns a "hash" of the current black board configuration
+ * 
+ * It is not believed that the same black configuration can 
+ * have multiple possibe white configurations.
+ * 
+ * "hash" in quotation marks because we aren't really hashing anything.
+ * It doesn't make much sense to hash a bitset in this context.
+ */
+bitset<128> Board::hsh()
+{
+    bitset<128> hash;
+    for (int x = 0; x < 16; x++)
+    {
+        hash[x] = black[x];
+        hash[x + 3] = taken[x];
+    }
+    return hash;
 }
 
 /*
