@@ -37,6 +37,7 @@ Player::Player(Side side) {
      */
     // Set our side and opponent's side
     this->mySide = side;
+    //std::cerr << "Black?" << (side == BLACK) << std::endl;
     (side == BLACK) ? this->oppSide = WHITE : this->oppSide = BLACK;
     this->board = new Board();
 }
@@ -72,43 +73,31 @@ void Player::setBoard(char data[])
  * return nullptr.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
+    if (opponentsMove != nullptr)
+          {
+              this->board->doMove(opponentsMove, oppSide);
+          }
+    
     if (this->testingMinimax)
     {
         return minimax_move(this->board, 0, true, this->mySide, 
                                    msLeft, 1, true);
     }
-    else
+    else 
     {
         if (opponentsMove != nullptr)
         {
             this->board->doMove(opponentsMove, oppSide);
         }
 
-<<<<<<< HEAD
-        // return alphabetaInitial(3, true, msLeft);
-=======
-        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
->>>>>>> 1e34672e0e2a7d1b06b11cb177427dc2a6ceacf8
-        /*
-        if(this->mySide == BLACK)
-            return doSimpleMove(opponentsMove, msLeft);
-        else
-            //return doCornerMove(opponentsMove, msLeft);
-            return doMobilityMove(opponentsMove, msLeft);
-        
-        return doLimitMove(opponentsMove, msLeft);
-        */
-
-        // std::cerr << "Making move" << std::endl;
-
-        Move *m = iterMax(this->board, &Player::evaluateWeightedCoins);
-        this->board->doMove(m, mySide);
+        // Move *m = iterMax(this->board, &Player::evaluateCornerCloseness);
+        Move *m =  minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
+        this->board->doMove(m, this->mySide);
         return m;
     }
 }
 
 Move *Player::iterMax(Board *board, double (Player::*eval)(Board *)) {
-    // std::cerr << "Performing iterMax" << std::endl;
     Move bestMove = Move(-1, -1);
     double bestScore = -11111111111111111;
     Move currMove = Move(0, 0);
@@ -116,7 +105,7 @@ Move *Player::iterMax(Board *board, double (Player::*eval)(Board *)) {
     Board testBoard = Board();
 
     // Iterate through all possible moves and determine legal move
-    // which yields the leastest possible moves for opponent.
+    // which yields the highest evaluation.
     for (int x = 0; x < 8; x++) {
         currMove.setX(x);
         for (int y = 0; y < 8; y++) {
@@ -125,8 +114,6 @@ Move *Player::iterMax(Board *board, double (Player::*eval)(Board *)) {
                 testBoard.copyFromBoard(board);
                 testBoard.doMove(&currMove, this->mySide);
                 currScore = (this->*eval)(&testBoard);
-                // std::cerr << "Move: (" << x << ", " << y << ") ";
-                // std::cerr << "-> Score: " << currScore << std::endl;
                 if (currScore > bestScore) {
                     bestMove.setX(x);
                     bestMove.setY(y);
@@ -265,7 +252,6 @@ Move *Player::doMobilityMove(Move *opponentsMove, int msLeft)
 }
 
 /**
-<<<<<<< HEAD
  * @brief Calculates and returns the number of moves for a given side
  */
 int Player::mobility_eval(Board *board, Side side)
@@ -533,14 +519,9 @@ double Player::minimax(Board *board, int depth, bool isMax,
 Move *Player::minimax_move(Board *board, int depth, bool isMax, 
                               Side side, int msLeft, int limit, bool isTest)
 {
-        if (!this->board->hasMoves(this->mySide))
-        {
-            return nullptr;
-        }
-        
         double value = (isMax) ? -100 : 100;
         
-        int xcor;
+        int xcor = -1;
         int ycor;
         
         Move *m = new Move(0, 0);
@@ -579,10 +560,18 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
        
         if (depth == 0 && isMax)
         {
+            
             m->setX(xcor);
             m->setY(ycor);
+            
         }
+        if (xcor == -1)
+            {
+                std::cerr << "nothing found" << std::endl;
+                return nullptr;
+            }
         return m;
+        
 }
 
 /**
@@ -595,22 +584,23 @@ double Player::evaluate(Board *board)
     //double stability_component = cat_eval(stability(1), stability(0));
     //double coins_component = cat_eval(coins(1), coins(0));
     //double mobility_component = cat_eval(mobility(1), mobility(0));
-    std::cerr << "evaluating" << std::endl;
-    double corners_weight = 0.3 * evaluateCornerCloseness(board);
-    std::cerr << "corner" << std::endl;
+    //std::cerr << "evaluating" << std::endl;
+    double corners_weight = 0.3; //* evaluateCornerCloseness(board);
+    //std::cerr << "corner" << std::endl;
     double mobility_weight = 0.05 * evaluateMobility(board);
-    std::cerr << "mobility" << std::endl;
+    //std::cerr << "mobility" << std::endl;
     double stability_weight = 0.25;
     double coins_weight = 0.25 * evaluateCoins(board);
-    std::cerr << "coin" << std::endl;
-    return coins_weight;//corners_weight + mobility_weight + stability_weight + coins_weight;
+    //std::cerr << "coin" << std::endl;
+    return corners_weight + mobility_weight + stability_weight + coins_weight;
 }
 
 double Player::evaluateCornerCloseness(Board *board) {
     int myTiles, oppTiles = 0;
+    int myCorners, oppCorners = 0;
     int dx, dy;
-    for (int x = 0; x < 8; x = x + 7) {
-        for (int y = 0; y < 8; y + 7) {
+    for (int x = 0; x < 8; x += 7) {
+        for (int y = 0; y < 8; y += 7) {
             if(!board->occupied(x,y)) {
                 (x == 0) ? dx = 1 : dx = 6;
                 (y == 0) ? dy = 1 : dy = 6;
@@ -627,9 +617,15 @@ double Player::evaluateCornerCloseness(Board *board) {
                     oppTiles++; 
                 }
             }
+            else {
+                if(board->get(this->mySide, x, y))
+                    myCorners++;
+                else
+                    oppCorners--;
+            }
         }
     }
-    return -12.5 * (myTiles - oppTiles);
+    return 25 * (myCorners - oppCorners) - 12.5 * (myTiles - oppTiles);
 }
 
 double Player::evaluateMobility(Board *board) {
