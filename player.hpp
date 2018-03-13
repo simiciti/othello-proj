@@ -13,6 +13,7 @@ public:
     ~Player();
 
     Move *doMove(Move *opponentsMove, int msLeft);
+    Move *iterMax(Board *board, double (Player::*eval)(Board *));
     Move *doSimpleMove(Move *opponentsMove, int msLeft);
     Move *doCornerMove(Move *opponentsMove, int msLeft);
     Move *doGreedyMove(Move *opponentsMove, int msLeft);
@@ -41,7 +42,7 @@ public:
     double evaluateCornerCloseness(Board *board);
     double evaluateMobility(Board *board);
     double evaluateCoins(Board *board);
-    int evaluateWeightedCoins(Board *board);
+    double evaluateWeightedCoins(Board *board);
     double getWeight(int x, int y);
     double cat_eval(double max_val, double min_val);
     

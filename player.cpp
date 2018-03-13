@@ -74,16 +74,16 @@ void Player::setBoard(char data[])
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
     if (this->testingMinimax)
     {
-        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2);
+        return minimax_move(this->board, 0, true, this->mySide, msLeft, 5);
     }
     else
     {
-          if (opponentsMove != nullptr)
-          {
-              this->board->doMove(opponentsMove, oppSide);
-          }
+        if (opponentsMove != nullptr)
+        {
+            this->board->doMove(opponentsMove, oppSide);
+        }
 
-        return alphabetaInitial(3, true, msLeft);
+        // return alphabetaInitial(3, true, msLeft);
         /*
         if(this->mySide == BLACK)
             return doSimpleMove(opponentsMove, msLeft);
@@ -93,7 +93,48 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         
         return doLimitMove(opponentsMove, msLeft);
         */
+
+        // std::cerr << "Making move" << std::endl;
+
+        Move *m = iterMax(this->board, &Player::evaluateWeightedCoins);
+        this->board->doMove(m, mySide);
+        return m;
     }
+}
+
+Move *Player::iterMax(Board *board, double (Player::*eval)(Board *)) {
+    // std::cerr << "Performing iterMax" << std::endl;
+    Move bestMove = Move(-1, -1);
+    double bestScore = -11111111111111111;
+    Move currMove = Move(0, 0);
+    double currScore;
+    Board testBoard = Board();
+
+    // Iterate through all possible moves and determine legal move
+    // which yields the leastest possible moves for opponent.
+    for (int x = 0; x < 8; x++) {
+        currMove.setX(x);
+        for (int y = 0; y < 8; y++) {
+            currMove.setY(y);
+            if (board->checkMove(&currMove, this->mySide)) {
+                testBoard.copyFromBoard(board);
+                testBoard.doMove(&currMove, this->mySide);
+                currScore = (this->*eval)(&testBoard);
+                // std::cerr << "Move: (" << x << ", " << y << ") ";
+                // std::cerr << "-> Score: " << currScore << std::endl;
+                if (currScore > bestScore) {
+                    bestMove.setX(x);
+                    bestMove.setY(y);
+                    bestScore = currScore;
+                }
+            }
+        }
+    }
+
+    if (bestMove.getX() == -1)
+        return nullptr;
+    else
+        return new Move(bestMove.getX(), bestMove.getY());
 }
 
 /**
@@ -169,6 +210,8 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
         return new Move(cornerMost.getX(), cornerMost.getY());
     }
 }
+
+
 Move *Player::doMobilityMove(Move *opponentsMove, int msLeft)
 {
      if (opponentsMove != nullptr)
@@ -335,7 +378,8 @@ Move *Player::doLimitMove(Move *opponentsMove, int msLeft) {
  */
 double Player::depth2_eval(Board *board)
 {
-    return board->count(this->mySide) - board->count(this->oppSide);
+    // return board->count(this->mySide) - board->count(this->oppSide);
+    return evaluateWeightedCoins(board);
 }
 
 
@@ -594,8 +638,8 @@ double Player::evaluateCornerCloseness(Board *board) {
 }
 
 double Player::evaluateMobility(Board *board) {
-    double myCount = board->countMoves(this->mySide);
-    double oppCount = board->countMoves(this->oppSide);
+    double myCount = (double) board->countMoves(this->mySide);
+    double oppCount = (double) board->countMoves(this->oppSide);
 
     if(myCount > oppCount)
         return (100 * myCount) / (myCount + oppCount);
@@ -610,7 +654,7 @@ double Player::evaluateCoins(Board *board) {
     return 100 * diff / 64;
 }
 
-int Player::evaluateWeightedCoins(Board *board) {
+double Player::evaluateWeightedCoins(Board *board) {
     int myScore = 0;
     int oppScore = 0;
     for (int x = 0; x < 8; x++) {
@@ -621,7 +665,7 @@ int Player::evaluateWeightedCoins(Board *board) {
                 oppScore += getWeight(x, y);
         }
     }
-    return myScore - oppScore;
+    return double (myScore - oppScore);
 }
 
 double Player::getWeight(int x, int y) {
