@@ -3,6 +3,17 @@
 #include <stdio.h>
 #include <cmath>
 
+#define symMove00 300.125
+#define symMove10 189.125
+#define symMove20 155.125
+#define symMove30 150.125
+#define symMove11 78.125
+#define symMove21 44.125
+#define symMove31 39.125
+#define symMove22 10.125
+#define symMove32 5.125
+#define symMove33 0.125
+
 /**
  * This specific file is in the repository of Nathaniel Smith
  * This is an (initially simple) player for a computerized version of the game othello.
@@ -595,7 +606,41 @@ double Player::evaluateMobility(Board *board) {
 }
 
 double Player::evaluateCoins(Board *board) {
-    return board->count(this->mySide) - board->count(this->oppSide);
+    double diff = board->count(this->mySide) - board->count(this->oppSide);
+    return 100 * diff / 64;
+}
+
+int Player::evaluateWeightedCoins(Board *board) {
+    int myScore = 0;
+    int oppScore = 0;
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            if (board->get(this->mySide, x, y))
+                myScore += getWeight(x, y);
+            else if (board->get(this->oppSide, x, y))
+                oppScore += getWeight(x, y);
+        }
+    }
+    return myScore - oppScore;
+}
+
+double Player::getWeight(int x, int y) {
+    double symMove = pow((x-3.5), 4) + pow((y-3.5), 4);
+
+    if (symMove == symMove00)
+        return 4;
+    else if (symMove == symMove10)
+        return -3;
+    else if (symMove == symMove11)
+        return -4;
+    else if (symMove == symMove20)
+        return 2;
+    else if (symMove == symMove21 || symMove == symMove31)
+        return -1;
+    else if (symMove == symMove22 || symMove == symMove33)
+        return 1;
+    else
+        return 0;
 }
 
 /**

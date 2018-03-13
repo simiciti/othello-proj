@@ -41,6 +41,8 @@ public:
     double evaluateCornerCloseness(Board *board);
     double evaluateMobility(Board *board);
     double evaluateCoins(Board *board);
+    int evaluateWeightedCoins(Board *board);
+    double getWeight(int x, int y);
     double cat_eval(double max_val, double min_val);
     
     
