@@ -16,9 +16,14 @@ public:
     Move *doSimpleMove(Move *opponentsMove, int msLeft);
     Move *doCornerMove(Move *opponentsMove, int msLeft);
     Move *doGreedyMove(Move *opponentsMove, int msLeft);
+<<<<<<< HEAD
     Move *doMobilityMove(Move *opponentsMove, int msLeft);
     
     
+=======
+    Move *doLimitMove(Move *opponentsMove, int msLeft);
+
+>>>>>>> e6a445b2320f48a32712ed7bad69d01a756c0a6e
     void setBoard(char data[]);
     
     
@@ -32,6 +37,8 @@ public:
     double depth2_eval(Board *board);
     int mobility_eval(Board *board, Side side);
     double evaluate(Board *board);
+    double evaluateCornerCloseness(Board *board);
+    double evaluateMobility(Board *board);
     double cat_eval(double max_val, double min_val);
     
     

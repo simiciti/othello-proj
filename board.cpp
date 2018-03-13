@@ -77,6 +77,20 @@ bool Board::hasMoves(Side side) {
 }
 
 /*
+ * Counts number of moves a given side can play
+ */
+int Board::countMoves(Side side) {
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Move move(i, j);
+            if (checkMove(&move, side)) count++;
+        }
+    }
+    return count;
+}
+
+/*
  * Returns true if a move is legal for the given side; false otherwise.
  */
 bool Board::checkMove(Move *m, Side side) {
