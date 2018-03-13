@@ -603,13 +603,13 @@ double Player::evaluate(Board *board)
     //double coins_component = cat_eval(coins(1), coins(0));
     // double mobility_component = cat_eval(mobility(1), mobility(0));
     
-    // double corners_weight = 0.3 * evaluateCornerCloseness(board);
-    // double mobility_weight = 0.2 * evaluateMobility(board);
-    // double stability_weight = 0.25;
-    // double coins_weight = 0.25 * evaluateCoins(board);
-    // return corners_weight + mobility_weight + stability_weight + 
-    //coins_weight;
-    return evaluateWeightedCoins(board);
+
+    double corners_weight = 0.3 * evaluateCornerCloseness(board);
+    double mobility_weight = 0.2 * evaluateMobility(board);
+    double stability_weight = 0.25;
+    double coins_weight = 0.25 * evaluateCoins(board);
+    return corners_weight + mobility_weight + stability_weight + coins_weight;
+    // return evaluateWeightedCoins(board);
 }
 
 double Player::evaluateCornerCloseness(Board *board) {
