@@ -27,8 +27,8 @@ public:
     
     
     
-    double minimax(Board *board, int depth, bool isMax, Side side, double *alpha, double *beta,
-                          int msLeft, int limit, bool isTest);
+    double minimax(Board *board, int depth, bool isMax, Side side, 
+        double *alpha, double *beta, int msLeft, int limit, bool isTest);
     Move* minimaxMove(Board *board, int depth, bool isMax, Side side, 
                           int msLeft, int limit, bool isTest);
     
