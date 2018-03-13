@@ -385,10 +385,10 @@ double Player::evaluate(Board *board)
     //double coins_component = cat_eval(coins(1), coins(0));
     //double mobility_component = cat_eval(mobility(1), mobility(0));
     
-    double corners_weight = 0.3;
-    double mobility_weight = 0.05;
+    double corners_weight = 0.3 * evaluateCornerCloseness(board);
+    double mobility_weight = 0.05 * evaluateMobility(board);
     double stability_weight = 0.25;
-    double coins_weight = 0.25;
+    double coins_weight = 0.25 * evaluateCoins(board);
     return corners_weight + mobility_weight + stability_weight + coins_weight;
 }
 
@@ -419,8 +419,8 @@ double Player::evaluateCornerCloseness(Board *board) {
 }
 
 double Player::evaluateMobility(Board *board) {
-    double myCount = board->count(this->mySide);
-    double oppCount = board->count(this->oppSide);
+    double myCount = board->countMoves(this->mySide);
+    double oppCount = board->countMoves(this->oppSide);
 
     if(myCount > oppCount)
         return (100 * myCount) / (myCount + oppCount);
@@ -430,7 +430,9 @@ double Player::evaluateMobility(Board *board) {
         return 0;
 }
 
-
+double Player::evaluateCoins(Board *board) {
+    return board->count(this->mySide) - board->count(this->oppSide);
+}
 
 /**
  * category agnostic evaluation function
