@@ -99,8 +99,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else 
     {
-        // Move *m = iterMax(this->board, &Player::evaluateCornerCloseness);
-        Move *m =  minimaxMove(this->board, 0, true, this->mySide, msLeft, 1, false);
+        Move *m =  minimaxMove(this->board, 0, true, this->mySide, msLeft, 2, false);
         this->board->doMove(m, this->mySide);
         return m;
     }
@@ -496,6 +495,7 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
         int ycor;
         int allocation = timeAllocation(msLeft, board->count(this->mySide) + board->count(this->oppSide));
         int used = 0;
+
         Move *m = new Move(0, 0);
         Move *l = new Move(0, 0);
         for (int n = 1; n < limit + 1; n++)
@@ -570,16 +570,29 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
 }
 
 /**
- * @brief Skeleton for a more complex evaluation function
+ * @brief Evaluation function
  */
 double Player::evaluate(Board *board)
 {
+    //corners not final name 
+    //double corners_component  = cat_eval(corners(1), corners(0));
+    //double stability_component = cat_eval(stability(1), stability(0));
+    //double coins_component = cat_eval(coins(1), coins(0));
+    // double mobility_component = cat_eval(mobility(1), mobility(0));
+    
+    // double corners_weight = 0.3 * evaluateCornerCloseness(board);
+    // double mobility_weight = 0.2 * evaluateMobility(board);
+    // double stability_weight = 0.25;
+    // double coins_weight = 0.25 * evaluateCoins(board);
+    // return corners_weight + mobility_weight + stability_weight + coins_weight;
     return evaluateWeightedCoins(board);
 }
 
 double Player::evaluateCornerCloseness(Board *board) {
-    int myTiles, oppTiles = 0;
-    int myCorners, oppCorners = 0;
+    int myTiles = 0;
+    int oppTiles = 0;
+    int myCorners = 0;
+    int oppCorners = 0;
     int dx, dy;
     for (int x = 0; x < 8; x += 7) {
         for (int y = 0; y < 8; y += 7) {
@@ -603,7 +616,7 @@ double Player::evaluateCornerCloseness(Board *board) {
                 if(board->get(this->mySide, x, y))
                     myCorners++;
                 else
-                    oppCorners--;
+                    oppCorners++;
             }
         }
     }
@@ -650,20 +663,50 @@ double Player::evaluateWeightedCoins(Board *board) {
 double Player::getWeight(int x, int y) {
     double symMove = pow((x-3.5), 4) + pow((y-3.5), 4);
 
-    if (symMove == symMove00)
-        return 4;
-    else if (symMove == symMove10)
-        return -3;
-    else if (symMove == symMove11)
-        return -4;
-    else if (symMove == symMove20)
-        return 2;
-    else if (symMove == symMove21 || symMove == symMove31)
-        return -1;
-    else if (symMove == symMove22 || symMove == symMove33)
-        return 1;
-    else
-        return 0;
+    if (symMove >= symMove11) {
+        if (symMove == symMove20) {
+            return 2;
+        }
+        else if (symMove > symMove20) {
+            if (symMove == symMove10)
+                return -3;
+            else
+                return 4;
+        }
+        else {
+            if (symMove == symMove30)
+                return 0;
+            else
+                return -4;
+        }
+    }
+    else 
+        if (symMove >= symMove31) {
+            return -1;
+        }
+        else {
+            if (symMove == symMove32)
+                return 0;
+            else
+                return 1;
+        }
+
+    // if (symMove == symMove00)
+    //     return 4;
+    // else if (symMove == symMove10)
+    //     return -3;
+    // else if (symMove == symMove11)
+    //     return -4;
+    // else if (symMove == symMove20)
+    //     return 2;
+    // else if (symMove == symMove21 || symMove == symMove31)
+    //     return -1;
+    // else if (symMove == symMove22 || symMove == symMove33)
+    //     return 1;
+    // else // (symMove == symMove32 || symMove == symMove30)
+    //     return 0;
+
+
 }
 
 /**
