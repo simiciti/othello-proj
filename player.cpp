@@ -108,7 +108,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     else 
     {
         Move *m =  minimaxMove(this->board, 0, true,
-                               this->mySide, msLeft, 2, false);
+                               this->mySide, msLeft, 6, false);
         this->board->doMove(m, this->mySide);
         return m;
     }
@@ -417,6 +417,7 @@ double Player::minimax(Board *board, int depth, bool isMax,
         {
             return depth2_eval(board);
         }
+        //cerr << "depth: " << depth << endl;
         return evaluate(board);
     }
     else
@@ -440,7 +441,7 @@ double Player::minimax(Board *board, int depth, bool isMax,
                     if (this->mySide == side)
                     {
                         
-                        if (this->board->table[hash])
+                        if (false)//this->board->table[hash])
                         {
                             path_value = this->board->table[hash];
                         }
@@ -449,13 +450,14 @@ double Player::minimax(Board *board, int depth, bool isMax,
                         path_value = minimax(&br_board, depth, 
                         !isMax, other, alpha, beta, msLeft, limit, isTest);
                          this->board->table[hash] = path_value;
+                         cerr << path_value;
                         }
                         value = std::max(value, path_value);
                         *alpha = std::max(*alpha, value);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
-                        if (this->board->table[hash])
+                        if (false) //this->board->table[hash])
                         {
                             path_value = this->board->table[hash];
                         }
@@ -484,6 +486,7 @@ double Player::minimax(Board *board, int depth, bool isMax,
  * @brief Level 0 for the minimax algorithm. This will recursively call
  * the algorithm for the player and the opponent to a depth of limit 
  * 
+ * Absolutely gimped iterative deepening 
  * @param board - a copy of the current board state in the tree
  * @param depth - the current depth in the tree. Should advance after a 
  * player - opponent cycle.
@@ -508,8 +511,8 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
         game. Am aware that in actual tournament play, may be case 
         of msLeft truly being 0, but odds of exactly 0 deemed low enough
         that this case needn't be considered.
-        
         */
+        
         int allocation = timeAllocation(msLeft, board->count(this->mySide) 
         + board->count(this->oppSide));
         if (msLeft <= 0)
@@ -520,7 +523,7 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
 
         Move *m = new Move(0, 0);
         Move *l = new Move(0, 0);
-        for (int n = 1; n < limit + 1; n++)
+        for (int n = limit - 1 ; n < limit + 1; n++)
         {
         if ((allocation - used) <= 0)
         {
@@ -557,12 +560,12 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
                     if (this->mySide == side)
                     {
                         path_value = minimax(&br_board, depth,!isMax, other, 
-                                             &alpha, &beta, msLeft, n, isTest);
+                                             &alpha, &beta, msLeft, limit, isTest);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
                         path_value = minimax(&br_board, depth + 1, !isMax, 
-                                    other, &alpha, &beta, msLeft, n, isTest);
+                                    other, &alpha, &beta, msLeft, limit, isTest);
                     }
                     if (isMax ^ (path_value < value))
                     {
@@ -589,6 +592,7 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
             std::chrono::duration<double> elapsed = end - start;
             used = elapsed.count() * 1000; //is in microseconds
         }
+        unordered_map<bitset<128>, double>::iterator it;
         return m;
 }
 
