@@ -461,7 +461,7 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
         double value = (isMax) ? -100 : 100;
         
         int xcor = -1;
-        int ycor;
+        int ycor = -1;
         
         Move *m = new Move(0, 0);
     
@@ -536,8 +536,10 @@ double Player::evaluate(Board *board)
 }
 
 double Player::evaluateCornerCloseness(Board *board) {
-    int myTiles, oppTiles = 0;
-    int myCorners, oppCorners = 0;
+    int myTiles = 0;
+    int oppTiles = 0;
+    int myCorners = 0;
+    int oppCorners = 0;
     int dx, dy;
     for (int x = 0; x < 8; x += 7) {
         for (int y = 0; y < 8; y += 7) {
@@ -561,7 +563,7 @@ double Player::evaluateCornerCloseness(Board *board) {
                 if(board->get(this->mySide, x, y))
                     myCorners++;
                 else
-                    oppCorners--;
+                    oppCorners++;
             }
         }
     }
