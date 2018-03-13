@@ -85,11 +85,6 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else 
     {
-        if (opponentsMove != nullptr)
-        {
-            this->board->doMove(opponentsMove, oppSide);
-        }
-
         // Move *m = iterMax(this->board, &Player::evaluateCornerCloseness);
         Move *m =  minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
         this->board->doMove(m, this->mySide);
@@ -97,10 +92,14 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
 }
 
-Move *Player::iterMax(Board *board, double (Player::*eval)(Board *)) {
+/**
+ * @brief returns the best possible move on given board with given evaluate 
+ *        functions (returns nullptr if no move is possible). 
+ */
+Move *Player::bestMoveWith(Board *board, double (Player::*eval)(Board *)) {
     Move bestMove = Move(-1, -1);
-    double bestScore = -11111111111111111;
     Move currMove = Move(0, 0);
+    double bestScore = -1000;
     double currScore;
     Board testBoard = Board();
 
@@ -110,6 +109,8 @@ Move *Player::iterMax(Board *board, double (Player::*eval)(Board *)) {
         currMove.setX(x);
         for (int y = 0; y < 8; y++) {
             currMove.setY(y);
+            // If move is available, evaluate for that move
+            // and update the best move and score accordingly.
             if (board->checkMove(&currMove, this->mySide)) {
                 testBoard.copyFromBoard(board);
                 testBoard.doMove(&currMove, this->mySide);
@@ -465,6 +466,8 @@ double Player::minimax(Board *board, int depth, bool isMax,
         
         double value = (isMax) ? -100 : 100;
         Move *m = new Move(0, 0);
+        double path_value;
+        Side other = (side == BLACK) ? WHITE : BLACK;
         
         for (int i = 0; i < 8; i++) {
             m->setX(i);
@@ -473,8 +476,6 @@ double Player::minimax(Board *board, int depth, bool isMax,
                 if (board->checkMove(m, side)) {
                     
                     br_board.doMove(m, side);
-                    double path_value;
-                    Side other = (side == BLACK) ? WHITE : BLACK;
                     if (this->mySide == side)
                     {
                         path_value = minimax(&br_board, depth, 
@@ -585,14 +586,15 @@ double Player::evaluate(Board *board)
     //double coins_component = cat_eval(coins(1), coins(0));
     //double mobility_component = cat_eval(mobility(1), mobility(0));
     //std::cerr << "evaluating" << std::endl;
-    double corners_weight = 0.3; //* evaluateCornerCloseness(board);
-    //std::cerr << "corner" << std::endl;
-    double mobility_weight = 0.05 * evaluateMobility(board);
-    //std::cerr << "mobility" << std::endl;
-    double stability_weight = 0.25;
-    double coins_weight = 0.25 * evaluateCoins(board);
-    //std::cerr << "coin" << std::endl;
-    return corners_weight + mobility_weight + stability_weight + coins_weight;
+    // double corners_weight = 0.3 * evaluateCornerCloseness(board);
+    // //std::cerr << "corner" << std::endl;
+    // double mobility_weight = 0.05 * evaluateMobility(board);
+    // //std::cerr << "mobility" << std::endl;
+    // double stability_weight = 0.25;
+    // double coins_weight = 0.25 * evaluateCoins(board);
+    // //std::cerr << "coin" << std::endl;
+    // return corners_weight + mobility_weight + stability_weight + coins_weight;
+    return evaluateWeightedCoins(board);
 }
 
 double Player::evaluateCornerCloseness(Board *board) {
@@ -625,7 +627,7 @@ double Player::evaluateCornerCloseness(Board *board) {
             }
         }
     }
-    return 25 * (myCorners - oppCorners) - 12.5 * (myTiles - oppTiles);
+    return 12.5 * (myCorners - oppCorners) - 6.25 * (myTiles - oppTiles);
 }
 
 double Player::evaluateMobility(Board *board) {

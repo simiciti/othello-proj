@@ -13,7 +13,7 @@ public:
     ~Player();
 
     Move *doMove(Move *opponentsMove, int msLeft);
-    Move *iterMax(Board *board, double (Player::*eval)(Board *));
+    Move *bestMoveWith(Board *board, double (Player::*eval)(Board *));
     Move *doSimpleMove(Move *opponentsMove, int msLeft);
     Move *doCornerMove(Move *opponentsMove, int msLeft);
     Move *doGreedyMove(Move *opponentsMove, int msLeft);
