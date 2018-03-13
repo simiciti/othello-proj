@@ -74,7 +74,8 @@ void Player::setBoard(char data[])
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
     if (this->testingMinimax)
     {
-        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2);
+        return minimax_move(this->board, 0, true, this->mySide, 
+                                   msLeft, 1, true);
     }
     else
     {
@@ -83,7 +84,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
               this->board->doMove(opponentsMove, oppSide);
           }
 
-        return alphabetaInitial(3, true, msLeft);
+        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
         /*
         if(this->mySide == BLACK)
             return doSimpleMove(opponentsMove, msLeft);
@@ -353,7 +354,7 @@ double Player::depth2_eval(Board *board)
  * @param limit - the depth to search before returnining 
  * 
  * @return the calculated utility for that branch
- */
+ 
 double Player::depth2_minimax(Board *board, int depth, bool isMax,
                               Side side, int msLeft, int limit)
 {
@@ -399,6 +400,77 @@ double Player::depth2_minimax(Board *board, int depth, bool isMax,
         return minimax;
     }
 }
+*/
+/**
+ * @brief The minimax algorithm. This will recursivey call
+ * the algorithm for the player and the opponent to a depth of limit 
+ * 
+ * @param board - a copy of the current board state in the tree
+ * @param depth - the current depth in the tree. Should advance after a 
+ * player - opponent cycle.
+ * @param isMax - are we seeking to maximize utiity (player) or minimize it 
+ * (opponent)?
+ * @param side - the current side for the entity calculating 
+ * @param alpha - the alpha value
+ * @param beta - the beta value
+ * @param msLeft- miliseconds left 
+ * @param limit - the depth to search before returnining 
+ * 
+ * @return the calculated utility for that branch
+ */
+double Player::minimax(Board *board, int depth, bool isMax,
+                              Side side, double *alpha, double *beta, int msLeft, int limit, bool isTest)
+{
+    if (depth > limit)
+    {
+        if (isTest)
+        {
+            return depth2_eval(board);
+        }
+        return evaluate(board);
+    }
+    else
+    {
+        Board br_board = Board();
+        br_board.copyFromBoard(board);
+        
+        double value = (isMax) ? -100 : 100;
+        Move *m = new Move(0, 0);
+        
+        for (int i = 0; i < 8; i++) {
+            m->setX(i);
+            for (int j = 0; j < 8; j++) {
+                m->setY(j);
+                if (board->checkMove(m, side)) {
+                    
+                    br_board.doMove(m, side);
+                    double path_value;
+                    Side other = (side == BLACK) ? WHITE : BLACK;
+                    if (this->mySide == side)
+                    {
+                        path_value = minimax(&br_board, depth, 
+                                                !isMax, other, alpha, beta, msLeft, limit, isTest);
+                        value = std::max(value, path_value);
+                        *alpha = std::max(*alpha, value);
+                    }
+                    else //this is a hypothetical calculation for the opponent 
+                    {
+                        path_value = minimax(&br_board, depth + 1, !isMax,
+                                                other, alpha, beta, msLeft, limit, isTest);
+                        value = std::min(value, path_value);
+                        *beta = std::min(*beta, value);
+                    }
+                    if (beta <= alpha)
+                    {
+                        break;
+                    }
+                    br_board.copyFromBoard(board);
+                }
+            }
+        }
+        return value;
+    }
+}
 
 /**
  * @brief Level 0 for the minimax algorithm. This will recursively call
@@ -416,48 +488,48 @@ double Player::depth2_minimax(Board *board, int depth, bool isMax,
  * @return the calculated best move
  */
 Move *Player::minimax_move(Board *board, int depth, bool isMax, 
-                              Side side, int msLeft, int limit)
+                              Side side, int msLeft, int limit, bool isTest)
 {
         if (!this->board->hasMoves(this->mySide))
         {
             return nullptr;
         }
         
-        double minimax = (isMax) ? -100 : 100;
+        double value = (isMax) ? -100 : 100;
         
         int xcor;
         int ycor;
         
         Move *m = new Move(0, 0);
     
-        Board br_board = Board();
-        br_board.copyFromBoard(board);
+        
         for (int i = 0; i < 8; i++) {
             m->setX(i);
             for (int j = 0; j < 8; j++) {
                 m->setY(j);
                 if (board->checkMove(m, side)) {
+                    Board br_board = Board();
+                    br_board.copyFromBoard(board);
                     br_board.doMove(m, side);
                     
                     double path_value;
+                    double alpha = -100;
+                    double beta = 100;
                     Side other = (side == BLACK) ? WHITE : BLACK;
                     if (this->mySide == side)
                     {
-                        path_value = depth2_minimax(&br_board, depth,
-                                                !isMax, other, msLeft, limit);
+                        path_value = minimax(&br_board, depth,!isMax, other, &alpha, &beta, msLeft, limit, isTest);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
-                        path_value = depth2_minimax(&br_board, depth + 1, 
-                                                !isMax, other, msLeft, limit);
+                        path_value = minimax(&br_board, depth + 1, !isMax, other, &alpha, &beta, msLeft, limit, isTest);
                     }
-                    if (isMax ^ (path_value < minimax))
+                    if (isMax ^ (path_value < value))
                     {
-                        minimax = path_value;
+                        value = path_value;
                         xcor = i;
                         ycor = j;
                     }
-                    br_board.copyFromBoard(board); 
                 }
             }
         }
@@ -471,85 +543,6 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
 }
 
 /**
- * @brief Initial function for alpha-beta pruning 
- * 
- * @param depth - max depth to search 
- * @param isMax - are we the maximizing player? (should be yes)
- * @param msLeft - time left 
- * 
- */
-Move *Player::alphabetaInitial(int depth, bool isMax, int msLeft)
-{
-    Move *move = new Move(-1, 0);
-    alphabeta(this->board, depth, -100, 100, isMax, this->mySide, move);
-    if (move->getX() != -1)
-    {
-        return move;
-    }
-    else 
-    {
-        return nullptr;
-    }
-}
-
-/**
- * @brief Implementation of alpha-beta pruning 
- * 
- * @param board - board pointer 
- * @param depth - max depth to search
- * @param alpha - alpha value 
- * @param beta - beta value 
- * @param ixMax - are we the maximizing player?
- * @param move - move pointer for best move 
- */
-double Player::alphabeta(Board *board, int depth, double alpha, double beta, 
-                 bool isMax, Side side,  Move *move)
-{
-    if (depth == 0 || board->isDone())
-    {
-        return evaluate(board);
-    }
-        double value = (isMax) ? -100 : 100;
-
-        Move *m = new Move(0, 0);
-        Side other = (side == BLACK) ? WHITE : BLACK;
-        Board br_board = Board();
-        br_board.copyFromBoard(board);
-        for (int i = 0; i < 8; i++) {
-            m->setX(i);
-            for (int j = 0; j < 8; j++) {
-                m->setY(j);
-                if (board->checkMove(m, side)) {
-                    br_board.doMove(m, side);
-                    
-                    if (isMax)
-                    {
-                        value = std::max(value, alphabeta(board, depth - 1, 
-                                            alpha, beta, false, other, move));
-                        alpha = std::max(alpha, value);
-                    }
-                    else
-                    {
-                        value =  std::min(value, alphabeta(board, depth - 1, 
-                                            alpha, beta, true, other, move));
-                        beta = std::min(beta, value);
-                    }
-                    if (beta <= alpha)
-                    {
-                        move->setX(i);
-                        move->setY(j);
-                        break;
-                    }
-                        
-                    br_board.copyFromBoard(board); 
-                    
-                }
-            }
-        }
-    delete move;
-    return value;
-}
-/**
  * @brief Skeleton for a more complex evaluation function
  */
 double Player::evaluate(Board *board)
@@ -559,12 +552,15 @@ double Player::evaluate(Board *board)
     //double stability_component = cat_eval(stability(1), stability(0));
     //double coins_component = cat_eval(coins(1), coins(0));
     //double mobility_component = cat_eval(mobility(1), mobility(0));
-    
+    std::cerr << "evaluating" << std::endl;
     double corners_weight = 0.3 * evaluateCornerCloseness(board);
+    std::cerr << "corner" << std::endl;
     double mobility_weight = 0.05 * evaluateMobility(board);
+    std::cerr << "mobility" << std::endl;
     double stability_weight = 0.25;
     double coins_weight = 0.25 * evaluateCoins(board);
-    return corners_weight + mobility_weight + stability_weight + coins_weight;
+    std::cerr << "coin" << std::endl;
+    return coins_weight;//corners_weight + mobility_weight + stability_weight + coins_weight;
 }
 
 double Player::evaluateCornerCloseness(Board *board) {

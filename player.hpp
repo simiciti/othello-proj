@@ -25,17 +25,15 @@ public:
     
     
     
-    double depth2_minimax(Board *board, int depth, bool isMax, Side side,
-                          int msLeft, int limit);
+    double minimax(Board *board, int depth, bool isMax, Side side, double *alpha, double *beta,
+                          int msLeft, int limit, bool isTest);
     Move* minimax_move(Board *board, int depth, bool isMax, Side side, 
-                          int msLeft, int limit);
+                          int msLeft, int limit, bool isTest);
     
     
     double depth2_eval(Board *board);
     
-    Move *alphabetaInitial(int depth, bool isMax, int msLeft);
-    double alphabeta(Board *board, int depth, double alpha, double beta, 
-                 bool isMax, Side side, Move *move);
+
     int mobility_eval(Board *board, Side side);
     double evaluate(Board *board);
     double evaluateCornerCloseness(Board *board);
