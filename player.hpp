@@ -16,10 +16,12 @@ public:
     Move *doSimpleMove(Move *opponentsMove, int msLeft);
     Move *doCornerMove(Move *opponentsMove, int msLeft);
     Move *doGreedyMove(Move *opponentsMove, int msLeft);
-
+    Move *doMobilityMove(Move *opponentsMove, int msLeft);
+    
+    
     void setBoard(char data[]);
     
-    double depth2_eval(Board *board);
+    
     
     double depth2_minimax(Board *board, int depth, bool isMax, Side side,
                           int msLeft, int limit);
@@ -27,8 +29,11 @@ public:
                           int msLeft, int limit);
     
     
+    double depth2_eval(Board *board);
+    int mobility_eval(Board *board, Side side);
     double evaluate(Board *board);
     double cat_eval(double max_val, double min_val);
+    
     
     // Flag to tell if the player is running within the test_minimax context
     bool testingMinimax;

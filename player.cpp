@@ -69,7 +69,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         if(this->mySide == BLACK)
             return doSimpleMove(opponentsMove, msLeft);
         else
-            return doCornerMove(opponentsMove, msLeft);
+            //return doCornerMove(opponentsMove, msLeft);
+            return doMobilityMove(opponentsMove, msLeft);
     }
 }
 
@@ -136,7 +137,71 @@ Move *Player::doCornerMove(Move *opponentsMove, int msLeft) {
         return new Move(cornerMost.getX(), cornerMost.getY());
     }
 }
+Move *Player::doMobilityMove(Move *opponentsMove, int msLeft)
+{
+     if (opponentsMove != nullptr)
+     {
+        this->board->doMove(opponentsMove, oppSide);
+     }
+    Board moves_board = Board();
+    moves_board.copyFromBoard(this->board);
+    
+    Move *m = new Move(1,1);
+    double state = -65;
+    int xcor = 0;
+    int ycor = 0;
+    for (int i = 0; i < 8; i++) {
+            m->setX(i);
+            for (int j = 0; j < 8; j++) {
+                m->setY(j);
+                if (board->checkMove(m, this->mySide)) {
+                    moves_board.doMove(m, this->mySide);
+                    
+                    int opp_moves = mobility_eval(&moves_board, this->oppSide);
+                    int moves = mobility_eval(&moves_board, this->mySide);
+                    double eval = cat_eval(moves, opp_moves);
+                    if (eval > state)
+                    {
+                        state = eval;
+                        xcor = i;
+                        ycor = j;
+                    }
+                    
+                }
+            }
+        }
+    if (state != -65)
+    {
+        m->setX(xcor);
+        m->setY(ycor);
+        return m;
+    }
+    else
+    {
+        return nullptr;
+    }
+     
+     
+}
 
+/**
+ * @brief Calculates and returns the number of moves for a given side
+ */
+int Player::mobility_eval(Board *board, Side side)
+{
+    Move *m = new Move(1,1);
+    int moves = 0;
+    for (int i = 0; i < 8; i++) {
+            m->setX(i);
+            for (int j = 0; j < 8; j++) {
+                m->setY(j);
+                if (board->checkMove(m, side)) {
+                    moves++;
+                }
+            }
+        }
+        return moves;
+}
 /**
  * @brief 
  */
