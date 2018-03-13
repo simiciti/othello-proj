@@ -304,7 +304,7 @@ Move *Player::doGreedyMove(Move *opponentsMove, int msLeft) {
         }
     }
 
-     // If no move was found, return nullptr. 
+    // If no move was found, return nullptr. 
     // Otherwise, return the move.
     if (best_score == -65)
         return nullptr;
@@ -347,7 +347,7 @@ Move *Player::doLimitMove(Move *opponentsMove, int msLeft) {
         }
     }
 
-     // If no move was found, return nullptr. 
+    // If no move was found, return nullptr. 
     // Otherwise, return the move.
     if (best_score == -65)
         return nullptr;
@@ -369,68 +369,6 @@ double Player::depth2_eval(Board *board)
     return evaluateWeightedCoins(board);
 }
 
-
-/**
- * @brief The minimax algorithm. This will recursivey call
- * the algorithm for the player and the opponent to a depth of limit 
- * 
- * @param board - a copy of the current board state in the tree
- * @param depth - the current depth in the tree. Should advance after a 
- * player - opponent cycle.
- * @param isMax - are we seeking to maximize utiity (player) or minimize it 
- * (opponent)?
- * @param side - the current side for the entity calculating 
- * @param msLeft- miliseconds left 
- * @param limit - the depth to search before returnining 
- * 
- * @return the calculated utility for that branch
- 
-double Player::depth2_minimax(Board *board, int depth, bool isMax,
-                              Side side, int msLeft, int limit)
-{
-    if (depth > limit)
-    {
-        return depth2_eval(board);
-    }
-    else
-    {
-        Board br_board = Board();
-        br_board.copyFromBoard(board);
-        
-        double minimax = (isMax) ? -100 : 100;
-        Move *m = new Move(0, 0);
-        
-        for (int i = 0; i < 8; i++) {
-            m->setX(i);
-            for (int j = 0; j < 8; j++) {
-                m->setY(j);
-                if (board->checkMove(m, side)) {
-                    
-                    br_board.doMove(m, side);
-                    double path_value;
-                    Side other = (side == BLACK) ? WHITE : BLACK;
-                    if (this->mySide == side)
-                    {
-                        path_value = depth2_minimax(&br_board, depth, 
-                                                !isMax, other, msLeft, limit);
-                    }
-                    else //this is a hypothetical calculation for the opponent 
-                    {
-                        path_value = depth2_minimax(&br_board, depth + 1, !isMax,
-                                                other, msLeft, limit);
-                    }
-                    if (isMax ^ (path_value < minimax))
-                    {
-                        minimax = path_value;
-                    }
-                    br_board.copyFromBoard(board);
-                }
-            }
-        }
-        return minimax;
-    }
-}
-*/
 /**
  * @brief The minimax algorithm. This will recursivey call
  * the algorithm for the player and the opponent to a depth of limit 
@@ -627,11 +565,17 @@ double Player::evaluateMobility(Board *board) {
         return 0;
 }
 
+/**
+ * @brief Counts difference in coins and normalizes value to the range [-100,100]
+ */
 double Player::evaluateCoins(Board *board) {
     double diff = board->count(this->mySide) - board->count(this->oppSide);
     return 100 * diff / 64;
 }
 
+/**
+ * @brief Counts difference in coins weighting by position. 
+ */
 double Player::evaluateWeightedCoins(Board *board) {
     int myScore = 0;
     int oppScore = 0;
