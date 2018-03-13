@@ -37,6 +37,7 @@ Player::Player(Side side) {
      */
     // Set our side and opponent's side
     this->mySide = side;
+    //std::cerr << "Black?" << (side == BLACK) << std::endl;
     (side == BLACK) ? this->oppSide = WHITE : this->oppSide = BLACK;
     this->board = new Board();
 }
@@ -72,6 +73,11 @@ void Player::setBoard(char data[])
  * return nullptr.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
+    if (opponentsMove != nullptr)
+          {
+              this->board->doMove(opponentsMove, oppSide);
+          }
+    
     if (this->testingMinimax)
     {
         return minimax_move(this->board, 0, true, this->mySide, 
@@ -79,12 +85,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else
     {
-          if (opponentsMove != nullptr)
-          {
-              this->board->doMove(opponentsMove, oppSide);
-          }
-
-        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
+        Move *m =  minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
+        this->board->doMove(m, this->mySide);
+        return m;
         /*
         if(this->mySide == BLACK)
             return doSimpleMove(opponentsMove, msLeft);
@@ -490,14 +493,9 @@ double Player::minimax(Board *board, int depth, bool isMax,
 Move *Player::minimax_move(Board *board, int depth, bool isMax, 
                               Side side, int msLeft, int limit, bool isTest)
 {
-        if (!this->board->hasMoves(this->mySide))
-        {
-            return nullptr;
-        }
-        
         double value = (isMax) ? -100 : 100;
         
-        int xcor;
+        int xcor = -1;
         int ycor;
         
         Move *m = new Move(0, 0);
@@ -536,10 +534,18 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
        
         if (depth == 0 && isMax)
         {
+            
             m->setX(xcor);
             m->setY(ycor);
+            
         }
+        if (xcor == -1)
+            {
+                std::cerr << "nothing found" << std::endl;
+                return nullptr;
+            }
         return m;
+        
 }
 
 /**
@@ -552,15 +558,15 @@ double Player::evaluate(Board *board)
     //double stability_component = cat_eval(stability(1), stability(0));
     //double coins_component = cat_eval(coins(1), coins(0));
     //double mobility_component = cat_eval(mobility(1), mobility(0));
-    std::cerr << "evaluating" << std::endl;
-    double corners_weight = 0.3 * evaluateCornerCloseness(board);
-    std::cerr << "corner" << std::endl;
+    //std::cerr << "evaluating" << std::endl;
+    double corners_weight = 0.3; //* evaluateCornerCloseness(board);
+    //std::cerr << "corner" << std::endl;
     double mobility_weight = 0.05 * evaluateMobility(board);
-    std::cerr << "mobility" << std::endl;
+    //std::cerr << "mobility" << std::endl;
     double stability_weight = 0.25;
     double coins_weight = 0.25 * evaluateCoins(board);
-    std::cerr << "coin" << std::endl;
-    return coins_weight;//corners_weight + mobility_weight + stability_weight + coins_weight;
+    //std::cerr << "coin" << std::endl;
+    return corners_weight + mobility_weight + stability_weight + coins_weight;
 }
 
 double Player::evaluateCornerCloseness(Board *board) {
