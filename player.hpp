@@ -2,6 +2,7 @@
 #define __PLAYER_H__
 
 #include <iostream>
+#include <unordered_map>
 #include "common.hpp"
 #include "board.hpp"
 using namespace std;
@@ -28,14 +29,16 @@ public:
     
     double minimax(Board *board, int depth, bool isMax, Side side, double *alpha, double *beta,
                           int msLeft, int limit, bool isTest);
-    Move* minimax_move(Board *board, int depth, bool isMax, Side side, 
+    Move* minimaxMove(Board *board, int depth, bool isMax, Side side, 
                           int msLeft, int limit, bool isTest);
     
     
     double depth2_eval(Board *board);
     
+    
 
     int mobility_eval(Board *board, Side side);
+    int timeAllocation(int msLeft, int move);
     double evaluate(Board *board);
     double evaluateCornerCloseness(Board *board);
     double evaluateMobility(Board *board);

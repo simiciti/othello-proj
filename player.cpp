@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <cmath>
+#include <chrono>
+#include <unordered_map>
 
 #define symMove00 300.125
 #define symMove10 189.125
@@ -29,7 +31,6 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
      * precalculating things, etc.) However, remember that you will only have
@@ -59,6 +60,19 @@ void Player::setBoard(char data[])
 {
     this->board->setBoard(data);
 }
+
+/**
+ * @brief Provides an approximate time allocation for a search 
+ * 
+ * @param msLeft - the time left 
+ * @param move - the current move (number of pieces on board - 4)
+ * 
+ * @return a time allocation
+ */
+int Player::timeAllocation(int msLeft, int move)
+{
+    return msLeft * ((move - 4) / 60);
+}
 /*
  * Compute the next move given the opponent's last move. Your AI is
  * expected to keep track of the board on its own. If this is the first move,
@@ -80,13 +94,12 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     
     if (this->testingMinimax)
     {
-        return minimax_move(this->board, 0, true, this->mySide, 
+        return minimaxMove(this->board, 0, true, this->mySide, 
                                    msLeft, 1, true);
     }
     else 
     {
-        // Move *m = bestMoveWith(this->board, &Player::evaluateWeightedCoins);
-        Move *m =  minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
+        Move *m =  minimaxMove(this->board, 0, true, this->mySide, msLeft, 2, false);
         this->board->doMove(m, this->mySide);
         return m;
     }
@@ -414,17 +427,35 @@ double Player::minimax(Board *board, int depth, bool isMax,
                 if (board->checkMove(m, side)) {
                     
                     br_board.doMove(m, side);
+                    bitset<128> hash = br_board.hsh();
                     if (this->mySide == side)
                     {
+                        
+                        if (this->board->table[hash])
+                        {
+                            path_value = this->board->table[hash];
+                        }
+                        else
+                        {
                         path_value = minimax(&br_board, depth, 
                                                 !isMax, other, alpha, beta, msLeft, limit, isTest);
+                         this->board->table[hash] = path_value;
+                        }
                         value = std::max(value, path_value);
                         *alpha = std::max(*alpha, value);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
+                        if (this->board->table[hash])
+                        {
+                            path_value = this->board->table[hash];
+                        }
+                        else
+                        {
                         path_value = minimax(&br_board, depth + 1, !isMax,
                                                 other, alpha, beta, msLeft, limit, isTest);
+                        this->board->table[hash] = path_value;
+                        }
                         value = std::min(value, path_value);
                         *beta = std::min(*beta, value);
                     }
@@ -455,22 +486,43 @@ double Player::minimax(Board *board, int depth, bool isMax,
  * 
  * @return the calculated best move
  */
-Move *Player::minimax_move(Board *board, int depth, bool isMax, 
+Move *Player::minimaxMove(Board *board, int depth, bool isMax, 
                               Side side, int msLeft, int limit, bool isTest)
 {
         double value = (isMax) ? -100 : 100;
-        
+        auto start = std::chrono::system_clock::now();
         int xcor = -1;
-        int ycor = -1;
-        
+        int ycor;
+        int allocation = timeAllocation(msLeft, board->count(this->mySide) + board->count(this->oppSide));
+        int used = 0;
+
         Move *m = new Move(0, 0);
-    
+        Move *l = new Move(0, 0);
+        for (int n = 1; n < limit + 1; n++)
+        {
+        if ((allocation - used) <= 0)
+        {
+            return m;
+            
+        }
+        else if (((used / allocation) > 0.4) && ((used / allocation ) <= 1))
+        {
+           if ((l->getX() == m->getX() && (l->getY() == m->getY()))) 
+           {
+               delete l;
+               return m;
+           }
+        }
         
+        l->setX(m->getX());
+        l->setY(m->getY());
         for (int i = 0; i < 8; i++) {
             m->setX(i);
             for (int j = 0; j < 8; j++) {
                 m->setY(j);
                 if (board->checkMove(m, side)) {
+                    
+                    
                     Board br_board = Board();
                     br_board.copyFromBoard(board);
                     br_board.doMove(m, side);
@@ -478,14 +530,15 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                     double path_value;
                     double alpha = -100;
                     double beta = 100;
+                    
                     Side other = (side == BLACK) ? WHITE : BLACK;
                     if (this->mySide == side)
                     {
-                        path_value = minimax(&br_board, depth,!isMax, other, &alpha, &beta, msLeft, limit, isTest);
+                        path_value = minimax(&br_board, depth,!isMax, other, &alpha, &beta, msLeft, n, isTest);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
-                        path_value = minimax(&br_board, depth + 1, !isMax, other, &alpha, &beta, msLeft, limit, isTest);
+                        path_value = minimax(&br_board, depth + 1, !isMax, other, &alpha, &beta, msLeft, n, isTest);
                     }
                     if (isMax ^ (path_value < value))
                     {
@@ -493,10 +546,10 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                         xcor = i;
                         ycor = j;
                     }
-                }
+                    
             }
         }
-       
+                }
         if (depth == 0 && isMax)
         {
             
@@ -509,12 +562,15 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                 std::cerr << "nothing found" << std::endl;
                 return nullptr;
             }
-        return m;
-        
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+            used = elapsed.count() * 1000; //is in microseconds
+        }
+        return nullptr;
 }
 
 /**
- * @brief Skeleton for a more complex evaluation function
+ * @brief Evaluation function
  */
 double Player::evaluate(Board *board)
 {
