@@ -85,7 +85,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else 
     {
-        // Move *m = iterMax(this->board, &Player::evaluateCornerCloseness);
+        // Move *m = bestMoveWith(this->board, &Player::evaluateWeightedCoins);
         Move *m =  minimax_move(this->board, 0, true, this->mySide, msLeft, 2, false);
         this->board->doMove(m, this->mySide);
         return m;
@@ -522,15 +522,12 @@ double Player::evaluate(Board *board)
     //double corners_component  = cat_eval(corners(1), corners(0));
     //double stability_component = cat_eval(stability(1), stability(0));
     //double coins_component = cat_eval(coins(1), coins(0));
-    //double mobility_component = cat_eval(mobility(1), mobility(0));
-    //std::cerr << "evaluating" << std::endl;
+    // double mobility_component = cat_eval(mobility(1), mobility(0));
+    
     // double corners_weight = 0.3 * evaluateCornerCloseness(board);
-    // //std::cerr << "corner" << std::endl;
-    // double mobility_weight = 0.05 * evaluateMobility(board);
-    // //std::cerr << "mobility" << std::endl;
+    // double mobility_weight = 0.2 * evaluateMobility(board);
     // double stability_weight = 0.25;
     // double coins_weight = 0.25 * evaluateCoins(board);
-    // //std::cerr << "coin" << std::endl;
     // return corners_weight + mobility_weight + stability_weight + coins_weight;
     return evaluateWeightedCoins(board);
 }
@@ -610,20 +607,50 @@ double Player::evaluateWeightedCoins(Board *board) {
 double Player::getWeight(int x, int y) {
     double symMove = pow((x-3.5), 4) + pow((y-3.5), 4);
 
-    if (symMove == symMove00)
-        return 4;
-    else if (symMove == symMove10)
-        return -3;
-    else if (symMove == symMove11)
-        return -4;
-    else if (symMove == symMove20)
-        return 2;
-    else if (symMove == symMove21 || symMove == symMove31)
-        return -1;
-    else if (symMove == symMove22 || symMove == symMove33)
-        return 1;
-    else
-        return 0;
+    if (symMove >= symMove11) {
+        if (symMove == symMove20) {
+            return 2;
+        }
+        else if (symMove > symMove20) {
+            if (symMove == symMove10)
+                return -3;
+            else
+                return 4;
+        }
+        else {
+            if (symMove == symMove30)
+                return 0;
+            else
+                return -4;
+        }
+    }
+    else 
+        if (symMove >= symMove31) {
+            return -1;
+        }
+        else {
+            if (symMove == symMove32)
+                return 0;
+            else
+                return 1;
+        }
+
+    // if (symMove == symMove00)
+    //     return 4;
+    // else if (symMove == symMove10)
+    //     return -3;
+    // else if (symMove == symMove11)
+    //     return -4;
+    // else if (symMove == symMove20)
+    //     return 2;
+    // else if (symMove == symMove21 || symMove == symMove31)
+    //     return -1;
+    // else if (symMove == symMove22 || symMove == symMove33)
+    //     return 1;
+    // else // (symMove == symMove32 || symMove == symMove30)
+    //     return 0;
+
+
 }
 
 /**
