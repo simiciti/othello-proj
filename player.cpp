@@ -63,20 +63,25 @@ void Player::setBoard(char data[])
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
     if (this->testingMinimax)
     {
-        return minimax_move(this->board, 0, true, this->mySide, msLeft, 0);
+        return minimax_move(this->board, 0, true, this->mySide, msLeft, 2);
     }
     else
     {
-<<<<<<< HEAD
+          if (opponentsMove != nullptr)
+          {
+              this->board->doMove(opponentsMove, oppSide);
+          }
+
+        return alphabetaInitial(3, true, msLeft);
+        /*
         if(this->mySide == BLACK)
             return doSimpleMove(opponentsMove, msLeft);
         else
             //return doCornerMove(opponentsMove, msLeft);
             return doMobilityMove(opponentsMove, msLeft);
-=======
         
         return doLimitMove(opponentsMove, msLeft);
->>>>>>> e6a445b2320f48a32712ed7bad69d01a756c0a6e
+        */
     }
 }
 
@@ -385,7 +390,7 @@ double Player::depth2_minimax(Board *board, int depth, bool isMax,
 }
 
 /**
- * @brief Level 0 for the minimax algorithm. This will recursivey call
+ * @brief Level 0 for the minimax algorithm. This will recursively call
  * the algorithm for the player and the opponent to a depth of limit 
  * 
  * @param board - a copy of the current board state in the tree
@@ -452,6 +457,86 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
             m->setY(ycor);
         }
         return m;
+}
+
+/**
+ * @brief Initial function for alpha-beta pruning 
+ * 
+ * @param depth - max depth to search 
+ * @param isMax - are we the maximizing player? (should be yes)
+ * @param msLeft - time left 
+ * 
+ */
+Move *Player::alphabetaInitial(int depth, bool isMax, int msLeft)
+{
+    Move *move = new Move(-1, 0);
+    alphabeta(this->board, depth, -100, 100, isMax, this->mySide, move);
+    if (move->getX() != -1)
+    {
+        return move;
+    }
+    else 
+    {
+        return nullptr;
+    }
+}
+
+/**
+ * @brief Implementation of alpha-beta pruning 
+ * 
+ * @param board - board pointer 
+ * @param depth - max depth to search
+ * @param alpha - alpha value 
+ * @param beta - beta value 
+ * @param ixMax - are we the maximizing player?
+ * @param move - move pointer for best move 
+ */
+double Player::alphabeta(Board *board, int depth, double alpha, double beta, 
+                 bool isMax, Side side,  Move *move)
+{
+    if (depth == 0 || board->isDone())
+    {
+        return evaluate(board);
+    }
+        double value = (isMax) ? -100 : 100;
+
+        Move *m = new Move(0, 0);
+        Side other = (side == BLACK) ? WHITE : BLACK;
+        Board br_board = Board();
+        br_board.copyFromBoard(board);
+        for (int i = 0; i < 8; i++) {
+            m->setX(i);
+            for (int j = 0; j < 8; j++) {
+                m->setY(j);
+                if (board->checkMove(m, side)) {
+                    br_board.doMove(m, side);
+                    
+                    if (isMax)
+                    {
+                        value = std::max(value, alphabeta(board, depth - 1, 
+                                            alpha, beta, false, other, move));
+                        alpha = std::max(alpha, value);
+                    }
+                    else
+                    {
+                        value =  std::min(value, alphabeta(board, depth - 1, 
+                                            alpha, beta, true, other, move));
+                        beta = std::min(beta, value);
+                    }
+                    if (beta <= alpha)
+                    {
+                        move->setX(i);
+                        move->setY(j);
+                        break;
+                    }
+                        
+                    br_board.copyFromBoard(board); 
+                    
+                }
+            }
+        }
+    delete move;
+    return value;
 }
 /**
  * @brief Skeleton for a more complex evaluation function
