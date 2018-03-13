@@ -2,8 +2,7 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <cmath>
-#include <time.h>
-#include chrono
+
 
 #define symMove00 300.125
 #define symMove10 189.125
@@ -31,7 +30,6 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-    
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
      * precalculating things, etc.) However, remember that you will only have
@@ -450,7 +448,7 @@ double Player::depth2_minimax(Board *board, int depth, bool isMax,
  * @return the calculated utility for that branch
  */
 double Player::minimax(Board *board, int depth, bool isMax,
-                              Side side, double *alpha, double *beta, int msLeft, int limit, bool isTest)
+                              Side side, double *alpha, double *beta, int msLeft, int limit, bool isTest, double *eval)
 {
     if (depth > limit)
     {
@@ -458,7 +456,7 @@ double Player::minimax(Board *board, int depth, bool isMax,
         {
             return depth2_eval(board);
         }
-        return evaluate(board);
+        return evaluate(board, eval);
     }
     else
     {
@@ -480,14 +478,14 @@ double Player::minimax(Board *board, int depth, bool isMax,
                     if (this->mySide == side)
                     {
                         path_value = minimax(&br_board, depth, 
-                                                !isMax, other, alpha, beta, msLeft, limit, isTest);
+                                                !isMax, other, alpha, beta, msLeft, limit, isTest, eval);
                         value = std::max(value, path_value);
                         *alpha = std::max(*alpha, value);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
                         path_value = minimax(&br_board, depth + 1, !isMax,
-                                                other, alpha, beta, msLeft, limit, isTest);
+                                                other, alpha, beta, msLeft, limit, isTest, eval);
                         value = std::min(value, path_value);
                         *beta = std::min(*beta, value);
                     }
@@ -527,14 +525,13 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
         int ycor;
         
         Move *m = new Move(0, 0);
-    
-        
         for (int i = 0; i < 8; i++) {
             m->setX(i);
             for (int j = 0; j < 8; j++) {
                 m->setY(j);
                 if (board->checkMove(m, side)) {
-                    auto start = std::chrono::system_clock::now();
+                    
+                    
                     Board br_board = Board();
                     br_board.copyFromBoard(board);
                     br_board.doMove(m, side);
@@ -542,14 +539,15 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                     double path_value;
                     double alpha = -100;
                     double beta = 100;
+                    
                     Side other = (side == BLACK) ? WHITE : BLACK;
                     if (this->mySide == side)
                     {
-                        path_value = minimax(&br_board, depth,!isMax, other, &alpha, &beta, msLeft, limit, isTest);
+                        path_value = minimax(&br_board, depth,!isMax, other, &alpha, &beta, msLeft, limit, isTest, &eval);
                     }
                     else //this is a hypothetical calculation for the opponent 
                     {
-                        path_value = minimax(&br_board, depth + 1, !isMax, other, &alpha, &beta, msLeft, limit, isTest);
+                        path_value = minimax(&br_board, depth + 1, !isMax, other, &alpha, &beta, msLeft, limit, isTest, &eval);
                     }
                     if (isMax ^ (path_value < value))
                     {
@@ -557,14 +555,10 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
                         xcor = i;
                         ycor = j;
                     }
-                    auto end = std::chrono::system_clock::now();
-                    std::chrono::duration<double> sec = end - start;
                     
-                    std::cerr << "single branch eval time " << sec.count() << std::endl;
-                }
             }
         }
-       
+                }
         if (depth == 0 && isMax)
         {
             
@@ -584,7 +578,7 @@ Move *Player::minimax_move(Board *board, int depth, bool isMax,
 /**
  * @brief Skeleton for a more complex evaluation function
  */
-double Player::evaluate(Board *board)
+double Player::evaluate(Board *board, double *eval)
 {
     //corners not final name 
     //double corners_component  = cat_eval(corners(1), corners(0));
@@ -592,7 +586,8 @@ double Player::evaluate(Board *board)
     //double coins_component = cat_eval(coins(1), coins(0));
     //double mobility_component = cat_eval(mobility(1), mobility(0));
     //std::cerr << "evaluating" << std::endl;
-    auto start = std::chrono::system_clock::now();
+    
+    auto st = std::chrono::system_clock::now();
     double corners_weight = 0.3; //* evaluateCornerCloseness(board);
     //std::cerr << "corner" << std::endl;
     double mobility_weight = 0.05 * evaluateMobility(board);
@@ -600,9 +595,6 @@ double Player::evaluate(Board *board)
     double stability_weight = 0.25;
     double coins_weight = 0.25 * evaluateCoins(board);
     //std::cerr << "coin" << std::endl;
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> sec = end - start;
-    std::cerr < "eval time " << sec.count() << std::endl;
     return corners_weight + mobility_weight + stability_weight + coins_weight;
 }
 
