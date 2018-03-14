@@ -109,7 +109,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     else 
     {
         Move *m =  minimaxMove(this->board, 0, true,
-                               this->mySide, msLeft, 3, false);
+                               this->mySide, msLeft, 1, false);
         this->board->doMove(m, this->mySide);
         return m;
     }
@@ -451,7 +451,7 @@ double Player::minimax(Board *board, int depth, bool isMax,
                         path_value = minimax(&br_board, depth, 
                         !isMax, other, alpha, beta, msLeft, limit, isTest);
                          this->board->table[hash] = path_value;
-                         cerr << path_value;
+                         std::cerr << path_value << std::endl;
                         }
                         value = std::max(value, path_value);
                         *alpha = std::max(*alpha, value);
