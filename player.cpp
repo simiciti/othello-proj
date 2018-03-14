@@ -513,16 +513,7 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
         of msLeft truly being 0, but odds of exactly 0 deemed low enough
         that this case needn't be considered.
         */
-<<<<<<< HEAD
-        // int allocation = timeAllocation(msLeft, board->count(this->mySide) 
-        // + board->count(this->oppSide));
-        // if (msLeft <= 0)
-        // {
-        //     allocation = 1000000;
-        // }
-        // int used = 0;
-=======
-        
+
         int allocation = timeAllocation(msLeft, board->count(this->mySide) 
         + board->count(this->oppSide));
         if (msLeft <= 0)
@@ -530,7 +521,6 @@ Move *Player::minimaxMove(Board *board, int depth, bool isMax,
             allocation = 1000000;
         }
         int used = 0;
->>>>>>> 569bae7b380fc78c040cf2c1e2d8d30955795fde
 
         Move *m = new Move(0, 0);
         Move *l = new Move(0, 0);
